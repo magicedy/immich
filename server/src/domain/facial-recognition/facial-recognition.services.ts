@@ -2,7 +2,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { join } from 'path';
 import { IAssetRepository, WithoutProperty } from '../asset';
 import { usePagination } from '../domain.util';
-import { IBaseJob, IEntityJob, IFaceThumbnailJob, IJobRepository, JobName, JOBS_ASSET_PAGINATION_SIZE } from '../job';
+import { IBaseJob, IEntityJob, IFaceThumbnailJob, IJobRepository, JOBS_ASSET_PAGINATION_SIZE, JobName } from '../job';
 import { CropOptions, FACE_THUMBNAIL_SIZE, IMediaRepository } from '../media';
 import { IPersonRepository } from '../person/person.repository';
 import { ISearchRepository } from '../search/search.repository';
@@ -162,8 +162,15 @@ export class FacialRecognitionService {
       height: newHalfSize * 2,
     };
 
+    const { thumbnail } = await this.configCore.getConfig();
     const croppedOutput = await this.mediaRepository.crop(asset.resizePath, cropOptions);
-    await this.mediaRepository.resize(croppedOutput, output, { size: FACE_THUMBNAIL_SIZE, format: 'jpeg' });
+    const thumbnailOptions = {
+      format: 'jpeg',
+      size: FACE_THUMBNAIL_SIZE,
+      colorspace: thumbnail.colorspace,
+      quality: thumbnail.quality,
+    } as const;
+    await this.mediaRepository.resize(croppedOutput, output, thumbnailOptions);
     await this.personRepository.update({ id: personId, thumbnailPath: output });
 
     return true;

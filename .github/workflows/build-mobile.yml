@@ -19,7 +19,7 @@ jobs:
   build-sign-android:
     name: Build and sign Android
     # Skip when PR from a fork
-    if: ${{ !github.event.pull_request.head.repo.fork }}
+    if: ${{ !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' }}
     runs-on: macos-12
 
     steps:
@@ -31,7 +31,7 @@ jobs:
           ref="${input_ref:-$github_ref}"
           echo "ref=$ref" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ steps.get-ref.outputs.ref }}
 

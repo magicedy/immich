@@ -4,6 +4,11 @@ export const errorStub = {
     statusCode: 401,
     message: 'Authentication required',
   },
+  forbidden: {
+    error: 'Forbidden',
+    statusCode: 403,
+    message: expect.any(String),
+  },
   wrongPassword: {
     error: 'Bad Request',
     statusCode: 400,
@@ -18,6 +23,11 @@ export const errorStub = {
     error: 'Bad Request',
     statusCode: 400,
     message: expect.any(Array),
+  },
+  noPermission: {
+    error: 'Bad Request',
+    statusCode: 400,
+    message: expect.stringContaining('Not found or no'),
   },
   incorrectLogin: {
     error: 'Unauthorized',

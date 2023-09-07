@@ -30,6 +30,7 @@
   let { isViewing: showAssetViewer, asset: viewingAsset } = assetViewingStore;
   let element: HTMLElement;
   let showShortcuts = false;
+  let showSkeleton = true;
 
   $: timelineY = element?.scrollTop || 0;
 
@@ -37,6 +38,7 @@
   const dispatch = createEventDispatcher<{ select: AssetResponseDto }>();
 
   onMount(async () => {
+    showSkeleton = false;
     document.addEventListener('keydown', onKeyboardPress);
     await assetStore.init(viewport);
   });
@@ -322,8 +324,25 @@
   bind:this={element}
   on:scroll={handleTimelineScroll}
 >
+  <!-- skeleton -->
+  {#if showSkeleton}
+    <div class="mt-8 animate-pulse">
+      <div class="mb-2 h-4 w-24 rounded-full bg-immich-primary/20 dark:bg-immich-dark-primary/20" />
+      <div class="flex w-[120%] flex-wrap">
+        {#each Array(100) as _}
+          <div class="m-[1px] h-[10em] w-[16em] bg-immich-primary/20 dark:bg-immich-dark-primary/20" />
+        {/each}
+      </div>
+    </div>
+  {/if}
+
   {#if element}
     <slot />
+
+    <!-- (optional) empty placeholder -->
+    {#if $assetStore.initialized && $assetStore.buckets.length === 0}
+      <slot name="empty" />
+    {/if}
     <section id="virtual-timeline" style:height={$assetStore.timelineHeight + 'px'}>
       {#each $assetStore.buckets as bucket, bucketIndex (bucketIndex)}
         <IntersectionObserver
