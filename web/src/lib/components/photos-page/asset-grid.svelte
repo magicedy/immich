@@ -17,6 +17,7 @@
   import Scrollbar from '../shared-components/scrollbar/scrollbar.svelte';
   import ShowShortcuts from '../shared-components/show-shortcuts.svelte';
   import AssetDateGroup from './asset-date-group.svelte';
+  import { shouldIgnoreShortcut } from '$lib/utils/shortcut';
 
   export let isSelectionMode = false;
   export let singleSelect = false;
@@ -54,7 +55,7 @@
   });
 
   const handleKeyboardPress = (event: KeyboardEvent) => {
-    if ($isSearchEnabled) {
+    if ($isSearchEnabled || shouldIgnoreShortcut(event)) {
       return;
     }
 
