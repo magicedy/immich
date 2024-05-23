@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -13,16 +13,16 @@ part of openapi.api;
 class SystemConfigMachineLearningDto {
   /// Returns a new [SystemConfigMachineLearningDto] instance.
   SystemConfigMachineLearningDto({
-    required this.classification,
     required this.clip,
+    required this.duplicateDetection,
     required this.enabled,
     required this.facialRecognition,
     required this.url,
   });
 
-  ClassificationConfig classification;
-
   CLIPConfig clip;
+
+  DuplicateDetectionConfig duplicateDetection;
 
   bool enabled;
 
@@ -32,28 +32,28 @@ class SystemConfigMachineLearningDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is SystemConfigMachineLearningDto &&
-     other.classification == classification &&
-     other.clip == clip &&
-     other.enabled == enabled &&
-     other.facialRecognition == facialRecognition &&
-     other.url == url;
+    other.clip == clip &&
+    other.duplicateDetection == duplicateDetection &&
+    other.enabled == enabled &&
+    other.facialRecognition == facialRecognition &&
+    other.url == url;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (classification.hashCode) +
     (clip.hashCode) +
+    (duplicateDetection.hashCode) +
     (enabled.hashCode) +
     (facialRecognition.hashCode) +
     (url.hashCode);
 
   @override
-  String toString() => 'SystemConfigMachineLearningDto[classification=$classification, clip=$clip, enabled=$enabled, facialRecognition=$facialRecognition, url=$url]';
+  String toString() => 'SystemConfigMachineLearningDto[clip=$clip, duplicateDetection=$duplicateDetection, enabled=$enabled, facialRecognition=$facialRecognition, url=$url]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-      json[r'classification'] = this.classification;
       json[r'clip'] = this.clip;
+      json[r'duplicateDetection'] = this.duplicateDetection;
       json[r'enabled'] = this.enabled;
       json[r'facialRecognition'] = this.facialRecognition;
       json[r'url'] = this.url;
@@ -68,8 +68,8 @@ class SystemConfigMachineLearningDto {
       final json = value.cast<String, dynamic>();
 
       return SystemConfigMachineLearningDto(
-        classification: ClassificationConfig.fromJson(json[r'classification'])!,
         clip: CLIPConfig.fromJson(json[r'clip'])!,
+        duplicateDetection: DuplicateDetectionConfig.fromJson(json[r'duplicateDetection'])!,
         enabled: mapValueOfType<bool>(json, r'enabled')!,
         facialRecognition: RecognitionConfig.fromJson(json[r'facialRecognition'])!,
         url: mapValueOfType<String>(json, r'url')!,
@@ -120,8 +120,8 @@ class SystemConfigMachineLearningDto {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'classification',
     'clip',
+    'duplicateDetection',
     'enabled',
     'facialRecognition',
     'url',

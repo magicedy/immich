@@ -1,9 +1,9 @@
 <script lang="ts">
   import CircleIconButton from '$lib/components/elements/buttons/circle-icon-button.svelte';
   import { downloadArchive, downloadFile } from '$lib/utils/asset-utils';
-  import CloudDownloadOutline from 'svelte-material-icons/CloudDownloadOutline.svelte';
   import MenuOption from '../../shared-components/context-menu/menu-option.svelte';
   import { getAssetControlContext } from '../asset-select-control-bar.svelte';
+  import { mdiCloudDownloadOutline, mdiFileDownloadOutline, mdiFolderDownloadOutline } from '@mdi/js';
 
   export let filename = 'immich.zip';
   export let menuItem = false;
@@ -11,7 +11,7 @@
   const { getAssets, clearSelect } = getAssetControlContext();
 
   const handleDownloadFiles = async () => {
-    const assets = Array.from(getAssets());
+    const assets = [...getAssets()];
     if (assets.length === 1) {
       clearSelect();
       await downloadFile(assets[0]);
@@ -21,10 +21,12 @@
     clearSelect();
     await downloadArchive(filename, { assetIds: assets.map((asset) => asset.id) });
   };
+
+  $: menuItemIcon = getAssets().size === 1 ? mdiFileDownloadOutline : mdiFolderDownloadOutline;
 </script>
 
 {#if menuItem}
-  <MenuOption text="Download" on:click={handleDownloadFiles} />
+  <MenuOption text="Download" icon={menuItemIcon} on:click={handleDownloadFiles} />
 {:else}
-  <CircleIconButton title="Download" logo={CloudDownloadOutline} on:click={handleDownloadFiles} />
+  <CircleIconButton title="Download" icon={mdiCloudDownloadOutline} on:click={handleDownloadFiles} />
 {/if}

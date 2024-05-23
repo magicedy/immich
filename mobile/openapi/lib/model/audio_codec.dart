@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -25,18 +25,18 @@ class AudioCodec {
 
   static const mp3 = AudioCodec._(r'mp3');
   static const aac = AudioCodec._(r'aac');
-  static const opus = AudioCodec._(r'opus');
+  static const libopus = AudioCodec._(r'libopus');
 
   /// List of all possible values in this [enum][AudioCodec].
   static const values = <AudioCodec>[
     mp3,
     aac,
-    opus,
+    libopus,
   ];
 
   static AudioCodec? fromJson(dynamic value) => AudioCodecTypeTransformer().decode(value);
 
-  static List<AudioCodec>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<AudioCodec> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <AudioCodec>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -72,7 +72,7 @@ class AudioCodecTypeTransformer {
       switch (data) {
         case r'mp3': return AudioCodec.mp3;
         case r'aac': return AudioCodec.aac;
-        case r'opus': return AudioCodec.opus;
+        case r'libopus': return AudioCodec.libopus;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

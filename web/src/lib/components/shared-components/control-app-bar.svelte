@@ -2,18 +2,21 @@
   import { browser } from '$app/environment';
 
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import Close from 'svelte-material-icons/Close.svelte';
   import CircleIconButton from '../elements/buttons/circle-icon-button.svelte';
   import { fly } from 'svelte/transition';
+  import { mdiClose } from '@mdi/js';
+  import { isSelectingAllAssets } from '$lib/stores/assets.store';
 
   export let showBackButton = true;
-  export let backIcon = Close;
+  export let backIcon = mdiClose;
   export let tailwindClasses = '';
   export let forceDark = false;
 
   let appBarBorder = 'bg-immich-bg border border-transparent';
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    close: void;
+  }>();
 
   const onScroll = () => {
     if (window.pageYOffset > 80) {
@@ -27,6 +30,11 @@
     }
   };
 
+  const handleClose = () => {
+    $isSelectingAllAssets = false;
+    dispatch('close');
+  };
+
   onMount(() => {
     if (browser) {
       document.addEventListener('scroll', onScroll);
@@ -38,25 +46,20 @@
       document.removeEventListener('scroll', onScroll);
     }
   });
+
+  $: buttonClass = forceDark ? 'hover:text-immich-dark-gray' : undefined;
 </script>
 
-<div in:fly={{ y: 10, duration: 200 }} class="fixed top-0 z-[100] w-full bg-transparent">
+<div in:fly={{ y: 10, duration: 200 }} class="absolute top-0 w-full z-[100] bg-transparent">
   <div
     id="asset-selection-app-bar"
-    class={`grid grid-cols-[10%_80%_10%] justify-between md:grid-cols-[20%_60%_20%] lg:grid-cols-3 ${appBarBorder} mx-2 mt-2 place-items-center rounded-lg p-2 transition-all ${tailwindClasses} dark:bg-immich-dark-gray ${
+    class={`grid grid-cols-[10%_80%_10%] justify-between md:grid-cols-[15%_70%_15%] lg:grid-cols-[25%_50%_25%]  ${appBarBorder} mx-2 mt-2 place-items-center rounded-lg p-2 transition-all ${tailwindClasses} dark:bg-immich-dark-gray ${
       forceDark && 'bg-immich-dark-gray text-white'
     }`}
   >
     <div class="flex place-items-center gap-6 justify-self-start dark:text-immich-dark-fg">
       {#if showBackButton}
-        <CircleIconButton
-          on:click={() => dispatch('close-button-click')}
-          logo={backIcon}
-          backgroundColor={'transparent'}
-          hoverColor={'#e2e7e9'}
-          size={'24'}
-          forceDark
-        />
+        <CircleIconButton title="Close" on:click={handleClose} icon={backIcon} size={'24'} class={buttonClass} />
       {/if}
       <slot name="leading" />
     </div>

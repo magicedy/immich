@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -16,14 +16,22 @@ class AssetResponseDto {
     required this.checksum,
     required this.deviceAssetId,
     required this.deviceId,
+    this.duplicateId,
     required this.duration,
     this.exifInfo,
     required this.fileCreatedAt,
     required this.fileModifiedAt,
+    required this.hasMetadata,
     required this.id,
     required this.isArchived,
+    this.isExternal,
     required this.isFavorite,
+    required this.isOffline,
+    this.isReadOnly,
+    required this.isTrashed,
+    this.libraryId,
     this.livePhotoVideoId,
+    required this.localDateTime,
     required this.originalFileName,
     required this.originalPath,
     this.owner,
@@ -31,6 +39,9 @@ class AssetResponseDto {
     this.people = const [],
     required this.resized,
     this.smartInfo,
+    this.stack = const [],
+    required this.stackCount,
+    this.stackParentId,
     this.tags = const [],
     required this.thumbhash,
     required this.type,
@@ -43,6 +54,8 @@ class AssetResponseDto {
   String deviceAssetId;
 
   String deviceId;
+
+  String? duplicateId;
 
   String duration;
 
@@ -58,13 +71,42 @@ class AssetResponseDto {
 
   DateTime fileModifiedAt;
 
+  bool hasMetadata;
+
   String id;
 
   bool isArchived;
 
+  /// This property was deprecated in v1.104.0
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isExternal;
+
   bool isFavorite;
 
+  bool isOffline;
+
+  /// This property was deprecated in v1.104.0
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isReadOnly;
+
+  bool isTrashed;
+
+  /// This property was deprecated in v1.106.0
+  String? libraryId;
+
   String? livePhotoVideoId;
+
+  DateTime localDateTime;
 
   String originalFileName;
 
@@ -80,7 +122,7 @@ class AssetResponseDto {
 
   String ownerId;
 
-  List<PersonResponseDto> people;
+  List<PersonWithFacesResponseDto> people;
 
   bool resized;
 
@@ -92,9 +134,14 @@ class AssetResponseDto {
   ///
   SmartInfoResponseDto? smartInfo;
 
+  List<AssetResponseDto> stack;
+
+  int? stackCount;
+
+  String? stackParentId;
+
   List<TagResponseDto> tags;
 
-  /// base64 encoded thumbhash
   String? thumbhash;
 
   AssetTypeEnum type;
@@ -103,28 +150,39 @@ class AssetResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is AssetResponseDto &&
-     other.checksum == checksum &&
-     other.deviceAssetId == deviceAssetId &&
-     other.deviceId == deviceId &&
-     other.duration == duration &&
-     other.exifInfo == exifInfo &&
-     other.fileCreatedAt == fileCreatedAt &&
-     other.fileModifiedAt == fileModifiedAt &&
-     other.id == id &&
-     other.isArchived == isArchived &&
-     other.isFavorite == isFavorite &&
-     other.livePhotoVideoId == livePhotoVideoId &&
-     other.originalFileName == originalFileName &&
-     other.originalPath == originalPath &&
-     other.owner == owner &&
-     other.ownerId == ownerId &&
-     other.people == people &&
-     other.resized == resized &&
-     other.smartInfo == smartInfo &&
-     other.tags == tags &&
-     other.thumbhash == thumbhash &&
-     other.type == type &&
-     other.updatedAt == updatedAt;
+    other.checksum == checksum &&
+    other.deviceAssetId == deviceAssetId &&
+    other.deviceId == deviceId &&
+    other.duplicateId == duplicateId &&
+    other.duration == duration &&
+    other.exifInfo == exifInfo &&
+    other.fileCreatedAt == fileCreatedAt &&
+    other.fileModifiedAt == fileModifiedAt &&
+    other.hasMetadata == hasMetadata &&
+    other.id == id &&
+    other.isArchived == isArchived &&
+    other.isExternal == isExternal &&
+    other.isFavorite == isFavorite &&
+    other.isOffline == isOffline &&
+    other.isReadOnly == isReadOnly &&
+    other.isTrashed == isTrashed &&
+    other.libraryId == libraryId &&
+    other.livePhotoVideoId == livePhotoVideoId &&
+    other.localDateTime == localDateTime &&
+    other.originalFileName == originalFileName &&
+    other.originalPath == originalPath &&
+    other.owner == owner &&
+    other.ownerId == ownerId &&
+    _deepEquality.equals(other.people, people) &&
+    other.resized == resized &&
+    other.smartInfo == smartInfo &&
+    _deepEquality.equals(other.stack, stack) &&
+    other.stackCount == stackCount &&
+    other.stackParentId == stackParentId &&
+    _deepEquality.equals(other.tags, tags) &&
+    other.thumbhash == thumbhash &&
+    other.type == type &&
+    other.updatedAt == updatedAt;
 
   @override
   int get hashCode =>
@@ -132,14 +190,22 @@ class AssetResponseDto {
     (checksum.hashCode) +
     (deviceAssetId.hashCode) +
     (deviceId.hashCode) +
+    (duplicateId == null ? 0 : duplicateId!.hashCode) +
     (duration.hashCode) +
     (exifInfo == null ? 0 : exifInfo!.hashCode) +
     (fileCreatedAt.hashCode) +
     (fileModifiedAt.hashCode) +
+    (hasMetadata.hashCode) +
     (id.hashCode) +
     (isArchived.hashCode) +
+    (isExternal == null ? 0 : isExternal!.hashCode) +
     (isFavorite.hashCode) +
+    (isOffline.hashCode) +
+    (isReadOnly == null ? 0 : isReadOnly!.hashCode) +
+    (isTrashed.hashCode) +
+    (libraryId == null ? 0 : libraryId!.hashCode) +
     (livePhotoVideoId == null ? 0 : livePhotoVideoId!.hashCode) +
+    (localDateTime.hashCode) +
     (originalFileName.hashCode) +
     (originalPath.hashCode) +
     (owner == null ? 0 : owner!.hashCode) +
@@ -147,19 +213,27 @@ class AssetResponseDto {
     (people.hashCode) +
     (resized.hashCode) +
     (smartInfo == null ? 0 : smartInfo!.hashCode) +
+    (stack.hashCode) +
+    (stackCount == null ? 0 : stackCount!.hashCode) +
+    (stackParentId == null ? 0 : stackParentId!.hashCode) +
     (tags.hashCode) +
     (thumbhash == null ? 0 : thumbhash!.hashCode) +
     (type.hashCode) +
     (updatedAt.hashCode);
 
   @override
-  String toString() => 'AssetResponseDto[checksum=$checksum, deviceAssetId=$deviceAssetId, deviceId=$deviceId, duration=$duration, exifInfo=$exifInfo, fileCreatedAt=$fileCreatedAt, fileModifiedAt=$fileModifiedAt, id=$id, isArchived=$isArchived, isFavorite=$isFavorite, livePhotoVideoId=$livePhotoVideoId, originalFileName=$originalFileName, originalPath=$originalPath, owner=$owner, ownerId=$ownerId, people=$people, resized=$resized, smartInfo=$smartInfo, tags=$tags, thumbhash=$thumbhash, type=$type, updatedAt=$updatedAt]';
+  String toString() => 'AssetResponseDto[checksum=$checksum, deviceAssetId=$deviceAssetId, deviceId=$deviceId, duplicateId=$duplicateId, duration=$duration, exifInfo=$exifInfo, fileCreatedAt=$fileCreatedAt, fileModifiedAt=$fileModifiedAt, hasMetadata=$hasMetadata, id=$id, isArchived=$isArchived, isExternal=$isExternal, isFavorite=$isFavorite, isOffline=$isOffline, isReadOnly=$isReadOnly, isTrashed=$isTrashed, libraryId=$libraryId, livePhotoVideoId=$livePhotoVideoId, localDateTime=$localDateTime, originalFileName=$originalFileName, originalPath=$originalPath, owner=$owner, ownerId=$ownerId, people=$people, resized=$resized, smartInfo=$smartInfo, stack=$stack, stackCount=$stackCount, stackParentId=$stackParentId, tags=$tags, thumbhash=$thumbhash, type=$type, updatedAt=$updatedAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'checksum'] = this.checksum;
       json[r'deviceAssetId'] = this.deviceAssetId;
       json[r'deviceId'] = this.deviceId;
+    if (this.duplicateId != null) {
+      json[r'duplicateId'] = this.duplicateId;
+    } else {
+    //  json[r'duplicateId'] = null;
+    }
       json[r'duration'] = this.duration;
     if (this.exifInfo != null) {
       json[r'exifInfo'] = this.exifInfo;
@@ -168,14 +242,33 @@ class AssetResponseDto {
     }
       json[r'fileCreatedAt'] = this.fileCreatedAt.toUtc().toIso8601String();
       json[r'fileModifiedAt'] = this.fileModifiedAt.toUtc().toIso8601String();
+      json[r'hasMetadata'] = this.hasMetadata;
       json[r'id'] = this.id;
       json[r'isArchived'] = this.isArchived;
+    if (this.isExternal != null) {
+      json[r'isExternal'] = this.isExternal;
+    } else {
+    //  json[r'isExternal'] = null;
+    }
       json[r'isFavorite'] = this.isFavorite;
+      json[r'isOffline'] = this.isOffline;
+    if (this.isReadOnly != null) {
+      json[r'isReadOnly'] = this.isReadOnly;
+    } else {
+    //  json[r'isReadOnly'] = null;
+    }
+      json[r'isTrashed'] = this.isTrashed;
+    if (this.libraryId != null) {
+      json[r'libraryId'] = this.libraryId;
+    } else {
+    //  json[r'libraryId'] = null;
+    }
     if (this.livePhotoVideoId != null) {
       json[r'livePhotoVideoId'] = this.livePhotoVideoId;
     } else {
     //  json[r'livePhotoVideoId'] = null;
     }
+      json[r'localDateTime'] = this.localDateTime.toUtc().toIso8601String();
       json[r'originalFileName'] = this.originalFileName;
       json[r'originalPath'] = this.originalPath;
     if (this.owner != null) {
@@ -190,6 +283,17 @@ class AssetResponseDto {
       json[r'smartInfo'] = this.smartInfo;
     } else {
     //  json[r'smartInfo'] = null;
+    }
+      json[r'stack'] = this.stack;
+    if (this.stackCount != null) {
+      json[r'stackCount'] = this.stackCount;
+    } else {
+    //  json[r'stackCount'] = null;
+    }
+    if (this.stackParentId != null) {
+      json[r'stackParentId'] = this.stackParentId;
+    } else {
+    //  json[r'stackParentId'] = null;
     }
       json[r'tags'] = this.tags;
     if (this.thumbhash != null) {
@@ -213,25 +317,36 @@ class AssetResponseDto {
         checksum: mapValueOfType<String>(json, r'checksum')!,
         deviceAssetId: mapValueOfType<String>(json, r'deviceAssetId')!,
         deviceId: mapValueOfType<String>(json, r'deviceId')!,
+        duplicateId: mapValueOfType<String>(json, r'duplicateId'),
         duration: mapValueOfType<String>(json, r'duration')!,
         exifInfo: ExifResponseDto.fromJson(json[r'exifInfo']),
-        fileCreatedAt: mapDateTime(json, r'fileCreatedAt', '')!,
-        fileModifiedAt: mapDateTime(json, r'fileModifiedAt', '')!,
+        fileCreatedAt: mapDateTime(json, r'fileCreatedAt', r'')!,
+        fileModifiedAt: mapDateTime(json, r'fileModifiedAt', r'')!,
+        hasMetadata: mapValueOfType<bool>(json, r'hasMetadata')!,
         id: mapValueOfType<String>(json, r'id')!,
         isArchived: mapValueOfType<bool>(json, r'isArchived')!,
+        isExternal: mapValueOfType<bool>(json, r'isExternal'),
         isFavorite: mapValueOfType<bool>(json, r'isFavorite')!,
+        isOffline: mapValueOfType<bool>(json, r'isOffline')!,
+        isReadOnly: mapValueOfType<bool>(json, r'isReadOnly'),
+        isTrashed: mapValueOfType<bool>(json, r'isTrashed')!,
+        libraryId: mapValueOfType<String>(json, r'libraryId'),
         livePhotoVideoId: mapValueOfType<String>(json, r'livePhotoVideoId'),
+        localDateTime: mapDateTime(json, r'localDateTime', r'')!,
         originalFileName: mapValueOfType<String>(json, r'originalFileName')!,
         originalPath: mapValueOfType<String>(json, r'originalPath')!,
         owner: UserResponseDto.fromJson(json[r'owner']),
         ownerId: mapValueOfType<String>(json, r'ownerId')!,
-        people: PersonResponseDto.listFromJson(json[r'people']),
+        people: PersonWithFacesResponseDto.listFromJson(json[r'people']),
         resized: mapValueOfType<bool>(json, r'resized')!,
         smartInfo: SmartInfoResponseDto.fromJson(json[r'smartInfo']),
+        stack: AssetResponseDto.listFromJson(json[r'stack']),
+        stackCount: mapValueOfType<int>(json, r'stackCount'),
+        stackParentId: mapValueOfType<String>(json, r'stackParentId'),
         tags: TagResponseDto.listFromJson(json[r'tags']),
         thumbhash: mapValueOfType<String>(json, r'thumbhash'),
         type: AssetTypeEnum.fromJson(json[r'type'])!,
-        updatedAt: mapDateTime(json, r'updatedAt', '')!,
+        updatedAt: mapDateTime(json, r'updatedAt', r'')!,
       );
     }
     return null;
@@ -285,13 +400,18 @@ class AssetResponseDto {
     'duration',
     'fileCreatedAt',
     'fileModifiedAt',
+    'hasMetadata',
     'id',
     'isArchived',
     'isFavorite',
+    'isOffline',
+    'isTrashed',
+    'localDateTime',
     'originalFileName',
     'originalPath',
     'ownerId',
     'resized',
+    'stackCount',
     'thumbhash',
     'type',
     'updatedAt',

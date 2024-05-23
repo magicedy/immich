@@ -1,29 +1,48 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
+  import IntersectionObserver from '$lib/components/asset-viewer/intersection-observer.svelte';
+  import CircleIconButton from '$lib/components/elements/buttons/circle-icon-button.svelte';
+  import AddToAlbum from '$lib/components/photos-page/actions/add-to-album.svelte';
+  import ArchiveAction from '$lib/components/photos-page/actions/archive-action.svelte';
+  import CreateSharedLink from '$lib/components/photos-page/actions/create-shared-link.svelte';
+  import DeleteAssets from '$lib/components/photos-page/actions/delete-assets.svelte';
+  import DownloadAction from '$lib/components/photos-page/actions/download-action.svelte';
+  import FavoriteAction from '$lib/components/photos-page/actions/favorite-action.svelte';
+  import AssetSelectContextMenu from '$lib/components/photos-page/asset-select-context-menu.svelte';
+  import AssetSelectControlBar from '$lib/components/photos-page/asset-select-control-bar.svelte';
+  import ChangeDate from '$lib/components/photos-page/actions/change-date-action.svelte';
+  import ChangeLocation from '$lib/components/photos-page/actions/change-location-action.svelte';
+  import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
+  import GalleryViewer from '$lib/components/shared-components/gallery-viewer/gallery-viewer.svelte';
+  import { AppRoute, QueryParameter } from '$lib/constants';
+  import { type Viewport } from '$lib/stores/assets.store';
   import { memoryStore } from '$lib/stores/memory.store';
+  import { getAssetThumbnailUrl, handlePromiseError, memoryLaneTitle } from '$lib/utils';
+  import { shortcuts } from '$lib/utils/shortcut';
+  import { fromLocalDateTime } from '$lib/utils/timeline-util';
+  import { ThumbnailFormat, getMemoryLane, type AssetResponseDto } from '@immich/sdk';
+  import {
+    mdiChevronDown,
+    mdiChevronLeft,
+    mdiChevronRight,
+    mdiChevronUp,
+    mdiDotsVertical,
+    mdiPause,
+    mdiPlay,
+    mdiPlus,
+    mdiSelectAll,
+  } from '@mdi/js';
   import { DateTime } from 'luxon';
   import { onMount } from 'svelte';
-  import { api } from '@api';
-  import { goto } from '$app/navigation';
-  import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
-  import Play from 'svelte-material-icons/Play.svelte';
-  import Pause from 'svelte-material-icons/Pause.svelte';
-  import ChevronDown from 'svelte-material-icons/ChevronDown.svelte';
-  import ChevronUp from 'svelte-material-icons/ChevronUp.svelte';
-  import ChevronLeft from 'svelte-material-icons/ChevronLeft.svelte';
-  import ChevronRight from 'svelte-material-icons/ChevronRight.svelte';
-  import { AppRoute } from '$lib/constants';
-  import { page } from '$app/stores';
-  import noThumbnailUrl from '$lib/assets/no-thumbnail.png';
-  import GalleryViewer from '$lib/components/shared-components/gallery-viewer/gallery-viewer.svelte';
-  import CircleIconButton from '$lib/components/elements/buttons/circle-icon-button.svelte';
-  import IntersectionObserver from '$lib/components/asset-viewer/intersection-observer.svelte';
-  import { fade } from 'svelte/transition';
   import { tweened } from 'svelte/motion';
+  import { fade } from 'svelte/transition';
 
-  const parseIndex = (s: string | null, max: number | null) => Math.max(Math.min(parseInt(s ?? '') || 0, max ?? 0), 0);
+  const parseIndex = (s: string | null, max: number | null) =>
+    Math.max(Math.min(Number.parseInt(s ?? '') || 0, max ?? 0), 0);
 
-  $: memoryIndex = parseIndex($page.url.searchParams.get('memory'), $memoryStore?.length - 1);
-  $: assetIndex = parseIndex($page.url.searchParams.get('asset'), currentMemory?.assets.length - 1);
+  $: memoryIndex = parseIndex($page.url.searchParams.get(QueryParameter.MEMORY_INDEX), $memoryStore?.length - 1);
+  $: assetIndex = parseIndex($page.url.searchParams.get(QueryParameter.ASSET_INDEX), currentMemory?.assets.length - 1);
 
   $: previousMemory = $memoryStore?.[memoryIndex - 1];
   $: currentMemory = $memoryStore?.[memoryIndex];
@@ -36,11 +55,14 @@
   $: canGoForward = !!(nextMemory || nextAsset);
   $: canGoBack = !!(previousMemory || previousAsset);
 
-  const toNextMemory = () => goto(`?memory=${memoryIndex + 1}`);
-  const toPreviousMemory = () => goto(`?memory=${memoryIndex - 1}`);
+  const viewport: Viewport = { width: 0, height: 0 };
+  const toNextMemory = () => goto(`?${QueryParameter.MEMORY_INDEX}=${memoryIndex + 1}`);
+  const toPreviousMemory = () => goto(`?${QueryParameter.MEMORY_INDEX}=${memoryIndex - 1}`);
 
-  const toNextAsset = () => goto(`?memory=${memoryIndex}&asset=${assetIndex + 1}`);
-  const toPreviousAsset = () => goto(`?memory=${memoryIndex}&asset=${assetIndex - 1}`);
+  const toNextAsset = () =>
+    goto(`?${QueryParameter.MEMORY_INDEX}=${memoryIndex}&${QueryParameter.ASSET_INDEX}=${assetIndex + 1}`);
+  const toPreviousAsset = () =>
+    goto(`?${QueryParameter.MEMORY_INDEX}=${memoryIndex}&${QueryParameter.ASSET_INDEX}=${assetIndex - 1}`);
 
   const toNext = () => (nextAsset ? toNextAsset() : toNextMemory());
   const toPrevious = () => (previousAsset ? toPreviousAsset() : toPreviousMemory());
@@ -58,71 +80,120 @@
   let paused = false;
 
   // Play or pause progress when the paused state changes.
-  $: paused ? pause() : play();
+  $: paused ? handlePromiseError(pause()) : handlePromiseError(play());
 
   // Progress should be paused when it's no longer possible to advance.
   $: paused ||= !canGoForward || galleryInView;
 
   // Advance to the next asset or memory when progress is complete.
-  $: $progress === 1 && toNext();
+  $: $progress === 1 && handlePromiseError(toNext());
 
   // Progress should be resumed when reset and not paused.
-  $: !$progress && !paused && play();
+  $: !$progress && !paused && handlePromiseError(play());
 
   // Progress should be reset when the current memory or asset changes.
-  $: memoryIndex, assetIndex, reset();
+  $: memoryIndex, assetIndex, handlePromiseError(reset());
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight' && canGoForward) {
-      e.preventDefault();
-      toNext();
-    } else if (e.key === 'ArrowLeft' && canGoBack) {
-      e.preventDefault();
-      toPrevious();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      goto(AppRoute.PHOTOS);
-    }
-  };
-
-  onMount(async () => {
-    if (!$memoryStore) {
-      const { data } = await api.assetApi.getMemoryLane({
-        timestamp: DateTime.local().startOf('day').toISO() || '',
-      });
-      $memoryStore = data;
-    }
-  });
+  let selectedAssets: Set<AssetResponseDto> = new Set();
+  $: isMultiSelectionMode = selectedAssets.size > 0;
 
   let memoryGallery: HTMLElement;
   let memoryWrapper: HTMLElement;
   let galleryInView = false;
+
+  $: isAllArchived = [...selectedAssets].every((asset) => asset.isArchived);
+  $: isAllFavorite = [...selectedAssets].every((asset) => asset.isFavorite);
+  $: {
+    if (!galleryInView) {
+      selectedAssets = new Set();
+    }
+  }
+
+  onMount(async () => {
+    if (!$memoryStore) {
+      const localTime = new Date();
+      $memoryStore = await getMemoryLane({
+        month: localTime.getMonth() + 1,
+        day: localTime.getDate(),
+      });
+    }
+  });
+
+  const triggerAssetUpdate = () => (currentMemory.assets = currentMemory.assets);
+
+  const onAssetDelete = (assetIds: string[]) => {
+    const assetIdSet = new Set(assetIds);
+    currentMemory.assets = currentMemory.assets.filter((a: AssetResponseDto) => !assetIdSet.has(a.id));
+  };
+
+  const handleSelectAll = () => {
+    selectedAssets = new Set(currentMemory.assets);
+  };
 </script>
 
-<svelte:window on:keydown={handleKeyDown} />
+<svelte:window
+  use:shortcuts={[
+    { shortcut: { key: 'ArrowRight' }, onShortcut: () => canGoForward && toNext() },
+    { shortcut: { key: 'ArrowLeft' }, onShortcut: () => canGoBack && toPrevious() },
+    { shortcut: { key: 'Escape' }, onShortcut: () => goto(AppRoute.PHOTOS) },
+  ]}
+/>
+
+{#if isMultiSelectionMode}
+  <div class="sticky top-0 z-[90]">
+    <AssetSelectControlBar assets={selectedAssets} clearSelect={() => (selectedAssets = new Set())}>
+      <CreateSharedLink />
+      <CircleIconButton title="Select all" icon={mdiSelectAll} on:click={handleSelectAll} />
+
+      <AssetSelectContextMenu icon={mdiPlus} title="Add to...">
+        <AddToAlbum />
+        <AddToAlbum shared />
+      </AssetSelectContextMenu>
+
+      <FavoriteAction removeFavorite={isAllFavorite} onFavorite={triggerAssetUpdate} />
+
+      <AssetSelectContextMenu icon={mdiDotsVertical} title="Add">
+        <DownloadAction menuItem />
+        <ChangeDate menuItem />
+        <ChangeLocation menuItem />
+        <ArchiveAction menuItem unarchive={isAllArchived} onArchive={triggerAssetUpdate} />
+        <DeleteAssets menuItem {onAssetDelete} />
+      </AssetSelectContextMenu>
+    </AssetSelectControlBar>
+  </div>
+{/if}
 
 <section id="memory-viewer" class="w-full bg-immich-dark-gray" bind:this={memoryWrapper}>
   {#if currentMemory}
-    <ControlAppBar on:close-button-click={() => goto(AppRoute.PHOTOS)} forceDark>
+    <ControlAppBar on:close={() => goto(AppRoute.PHOTOS)} forceDark>
       <svelte:fragment slot="leading">
         <p class="text-lg">
-          {currentMemory.title}
+          {memoryLaneTitle(currentMemory.yearsAgo)}
         </p>
       </svelte:fragment>
 
-      {#if !galleryInView}
+      {#if canGoForward}
         <div class="flex place-content-center place-items-center gap-2 overflow-hidden">
-          <CircleIconButton logo={paused ? Play : Pause} forceDark on:click={() => (paused = !paused)} />
+          <CircleIconButton
+            title={paused ? 'Play memories' : 'Pause memories'}
+            icon={paused ? mdiPlay : mdiPause}
+            on:click={() => (paused = !paused)}
+            class="hover:text-black"
+          />
 
-          {#each currentMemory.assets as _, i}
-            <button class="relative w-full py-2" on:click={() => goto(`?memory=${memoryIndex}&asset=${i}`)}>
+          {#each currentMemory.assets as _, index}
+            <button
+              class="relative w-full py-2"
+              on:click={() =>
+                goto(`?${QueryParameter.MEMORY_INDEX}=${memoryIndex}&${QueryParameter.ASSET_INDEX}=${index}`)}
+            >
               <span class="absolute left-0 h-[2px] w-full bg-gray-500" />
               {#await resetPromise}
-                <span class="absolute left-0 h-[2px] bg-white" style:width={`${i < assetIndex ? 100 : 0}%`} />
+                <span class="absolute left-0 h-[2px] bg-white" style:width={`${index < assetIndex ? 100 : 0}%`} />
               {:then}
                 <span
                   class="absolute left-0 h-[2px] bg-white"
-                  style:width={`${i < assetIndex ? 100 : i > assetIndex ? 0 : $progress * 100}%`}
+                  style:width={`${index < assetIndex ? 100 : index > assetIndex ? 0 : $progress * 100}%`}
                 />
               {/await}
             </button>
@@ -144,7 +215,7 @@
         class:opacity-100={galleryInView}
       >
         <button on:click={() => memoryWrapper.scrollIntoView({ behavior: 'smooth' })} disabled={!galleryInView}>
-          <CircleIconButton logo={ChevronUp} backgroundColor="white" forceDark />
+          <CircleIconButton title="Hide gallery" icon={mdiChevronUp} color="light" />
         </button>
       </div>
     {/if}
@@ -161,17 +232,27 @@
           class:hover:opacity-70={previousMemory}
         >
           <button class="relative h-full w-full rounded-2xl" disabled={!previousMemory} on:click={toPreviousMemory}>
-            <img
-              class="h-full w-full rounded-2xl object-cover"
-              src={previousMemory ? api.getAssetThumbnailUrl(previousMemory.assets[0].id, 'JPEG') : noThumbnailUrl}
-              alt=""
-              draggable="false"
-            />
+            {#if previousMemory}
+              <img
+                class="h-full w-full rounded-2xl object-cover"
+                src={getAssetThumbnailUrl(previousMemory.assets[0].id, ThumbnailFormat.Jpeg)}
+                alt="Previous memory"
+                draggable="false"
+              />
+            {:else}
+              <enhanced:img
+                class="h-full w-full rounded-2xl object-cover"
+                src="$lib/assets/no-thumbnail.png"
+                sizes="min(271px,186px)"
+                alt="Previous memory"
+                draggable="false"
+              />
+            {/if}
 
             {#if previousMemory}
               <div class="absolute bottom-4 right-4 text-left text-white">
                 <p class="text-xs font-semibold text-gray-200">PREVIOUS</p>
-                <p class="text-xl">{previousMemory.title}</p>
+                <p class="text-xl">{memoryLaneTitle(previousMemory.yearsAgo)}</p>
               </div>
             {/if}
           </button>
@@ -181,38 +262,32 @@
         <div
           class="main-view relative flex h-full w-[70vw] place-content-center place-items-center rounded-2xl bg-black"
         >
-          <div class="h-full w-full rounded-2xl bg-black">
-            <!-- CONTROL BUTTONS -->
-            <div class="absolute flex h-full w-full justify-between">
-              <div class="ml-4 flex h-full flex-col place-content-center place-items-center">
-                <div class="inline-block">
-                  {#if canGoBack}
-                    <CircleIconButton logo={ChevronLeft} backgroundColor="#202123" on:click={toPrevious} />
-                  {/if}
-                </div>
-              </div>
-              <div class="mr-4 flex h-full flex-col place-content-center place-items-center">
-                <div class="inline-block">
-                  {#if canGoForward}
-                    <CircleIconButton logo={ChevronRight} backgroundColor="#202123" on:click={toNext} />
-                  {/if}
-                </div>
-              </div>
-            </div>
-
+          <div class="relative h-full w-full rounded-2xl bg-black">
             {#key currentAsset.id}
               <img
                 transition:fade
                 class="h-full w-full rounded-2xl object-contain transition-all"
-                src={api.getAssetThumbnailUrl(currentAsset.id, 'JPEG')}
-                alt=""
+                src={getAssetThumbnailUrl(currentAsset.id, ThumbnailFormat.Jpeg)}
+                alt={currentAsset.exifInfo?.description}
                 draggable="false"
               />
             {/key}
+            <!-- CONTROL BUTTONS -->
+            {#if canGoBack}
+              <div class="absolute top-1/2 left-0 ml-4">
+                <CircleIconButton title="Previous memory" icon={mdiChevronLeft} color="dark" on:click={toPrevious} />
+              </div>
+            {/if}
+
+            {#if canGoForward}
+              <div class="absolute top-1/2 right-0 mr-4">
+                <CircleIconButton title="Next memory" icon={mdiChevronRight} color="dark" on:click={toNext} />
+              </div>
+            {/if}
 
             <div class="absolute left-8 top-4 text-sm font-medium text-white">
               <p>
-                {DateTime.fromISO(currentMemory.assets[0].fileCreatedAt).toLocaleString(DateTime.DATE_FULL)}
+                {fromLocalDateTime(currentMemory.assets[0].localDateTime).toLocaleString(DateTime.DATE_FULL)}
               </p>
               <p>
                 {currentAsset.exifInfo?.city || ''}
@@ -230,17 +305,27 @@
           class:hover:opacity-70={nextMemory}
         >
           <button class="relative h-full w-full rounded-2xl" on:click={toNextMemory} disabled={!nextMemory}>
-            <img
-              class="h-full w-full rounded-2xl object-cover"
-              src={nextMemory ? api.getAssetThumbnailUrl(nextMemory.assets[0].id, 'JPEG') : noThumbnailUrl}
-              alt=""
-              draggable="false"
-            />
+            {#if nextMemory}
+              <img
+                class="h-full w-full rounded-2xl object-cover"
+                src={getAssetThumbnailUrl(nextMemory.assets[0].id, ThumbnailFormat.Jpeg)}
+                alt="Next memory"
+                draggable="false"
+              />
+            {:else}
+              <enhanced:img
+                class="h-full w-full rounded-2xl object-cover"
+                src="$lib/assets/no-thumbnail.png"
+                sizes="min(271px,186px)"
+                alt="Next memory"
+                draggable="false"
+              />
+            {/if}
 
             {#if nextMemory}
               <div class="absolute bottom-4 left-4 text-left text-white">
                 <p class="text-xs font-semibold text-gray-200">UP NEXT</p>
-                <p class="text-xl">{nextMemory.title}</p>
+                <p class="text-xl">{memoryLaneTitle(nextMemory.yearsAgo)}</p>
               </div>
             {/if}
           </button>
@@ -248,17 +333,19 @@
       </div>
     </section>
 
-    <!-- GALERY VIEWER -->
-
-    <section class="bg-immich-dark-gray pl-4">
+    <!-- GALLERY VIEWER -->
+    <section class="bg-immich-dark-gray m-4">
       <div
         class="sticky mb-10 mt-4 flex place-content-center place-items-center transition-all"
         class:opacity-0={galleryInView}
         class:opacity-100={!galleryInView}
       >
-        <button on:click={() => memoryGallery.scrollIntoView({ behavior: 'smooth' })}>
-          <CircleIconButton logo={ChevronDown} backgroundColor="white" forceDark />
-        </button>
+        <CircleIconButton
+          title="Show gallery"
+          icon={mdiChevronDown}
+          color="light"
+          on:click={() => memoryGallery.scrollIntoView({ behavior: 'smooth' })}
+        />
       </div>
 
       <IntersectionObserver
@@ -267,8 +354,13 @@
         on:hidden={() => (galleryInView = false)}
         bottom={-200}
       >
-        <div id="gallery-memory" bind:this={memoryGallery}>
-          <GalleryViewer assets={currentMemory.assets} />
+        <div
+          id="gallery-memory"
+          bind:this={memoryGallery}
+          bind:clientHeight={viewport.height}
+          bind:clientWidth={viewport.width}
+        >
+          <GalleryViewer assets={currentMemory.assets} {viewport} bind:selectedAssets />
         </div>
       </IntersectionObserver>
     </section>
@@ -277,6 +369,8 @@
 
 <style>
   .main-view {
-    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.3), 0 8px 12px 6px rgba(0, 0, 0, 0.15);
+    box-shadow:
+      0 4px 4px 0 rgba(0, 0, 0, 0.3),
+      0 8px 12px 6px rgba(0, 0, 0, 0.15);
   }
 </style>

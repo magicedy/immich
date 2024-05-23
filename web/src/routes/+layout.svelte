@@ -1,33 +1,70 @@
 <script lang="ts">
-  import '../app.css';
-  import { page } from '$app/stores';
   import { afterNavigate, beforeNavigate } from '$app/navigation';
-  import NavigationLoadingBar from '$lib/components/shared-components/navigation-loading-bar.svelte';
+  import { page } from '$app/stores';
   import DownloadPanel from '$lib/components/asset-viewer/download-panel.svelte';
-  import UploadPanel from '$lib/components/shared-components/upload-panel.svelte';
-  import NotificationList from '$lib/components/shared-components/notification/notification-list.svelte';
-  import VersionAnnouncementBox from '$lib/components/shared-components/version-announcement-box.svelte';
-  import type { LayoutData } from './$types';
-  import { fileUploadHandler } from '$lib/utils/file-uploader';
-  import UploadCover from '$lib/components/shared-components/drag-and-drop-upload-overlay.svelte';
-  import FullscreenContainer from '$lib/components/shared-components/fullscreen-container.svelte';
   import AppleHeader from '$lib/components/shared-components/apple-header.svelte';
-  import FaviconHeader from '$lib/components/shared-components/favicon-header.svelte';
-  import { onMount } from 'svelte';
+  import FullscreenContainer from '$lib/components/shared-components/fullscreen-container.svelte';
+  import NavigationLoadingBar from '$lib/components/shared-components/navigation-loading-bar.svelte';
+  import NotificationList from '$lib/components/shared-components/notification/notification-list.svelte';
+  import UploadPanel from '$lib/components/shared-components/upload-panel.svelte';
+  import VersionAnnouncementBox from '$lib/components/shared-components/version-announcement-box.svelte';
+  import { Theme } from '$lib/constants';
+  import { colorTheme, handleToggleTheme, type ThemeSetting } from '$lib/stores/preferences.store';
   import { loadConfig } from '$lib/stores/server-config.store';
+  import { user } from '$lib/stores/user.store';
+  import { closeWebsocketConnection, openWebsocketConnection } from '$lib/stores/websocket';
+  import { setKey } from '$lib/utils';
   import { handleError } from '$lib/utils/handle-error';
-  import { dragAndDropFilesStore } from '$lib/stores/drag-and-drop-files.store';
-  import { api } from '@api';
+  import { onDestroy, onMount } from 'svelte';
+  import '../app.css';
+  import { isAssetViewerRoute, isSharedLinkRoute } from '$lib/utils/navigation';
 
   let showNavigationLoadingBar = false;
-  export let data: LayoutData;
-  let albumId: string | undefined;
 
-  if ($page.route.id?.startsWith('/(user)/share/[key]')) {
-    api.setKey($page.params.key);
+  $: changeTheme($colorTheme);
+
+  $: if ($user) {
+    openWebsocketConnection();
+  } else {
+    closeWebsocketConnection();
   }
 
-  beforeNavigate(() => {
+  const changeTheme = (theme: ThemeSetting) => {
+    if (theme.system) {
+      theme.value =
+        window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? Theme.DARK : Theme.LIGHT;
+    }
+
+    if (theme.value === Theme.LIGHT) {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+  };
+
+  const handleChangeTheme = () => {
+    if ($colorTheme.system) {
+      handleToggleTheme();
+    }
+  };
+
+  onMount(() => {
+    // if the browser theme changes, changes the Immich theme too
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleChangeTheme);
+  });
+
+  onDestroy(() => {
+    document.removeEventListener('change', handleChangeTheme);
+  });
+
+  if (isSharedLinkRoute($page.route?.id)) {
+    setKey($page.params.key);
+  }
+
+  beforeNavigate(({ from, to }) => {
+    if (isAssetViewerRoute(from) && isAssetViewerRoute(to)) {
+      return;
+    }
     showNavigationLoadingBar = true;
   });
 
@@ -42,30 +79,12 @@
       handleError(error, 'Unable to connect to server');
     }
   });
-
-  const dropHandler = async ({ dataTransfer }: DragEvent) => {
-    const files = dataTransfer?.files;
-    if (!files) {
-      return;
-    }
-
-    const filesArray: File[] = Array.from<File>(files);
-    albumId = ($page.route.id === '/(user)/albums/[albumId]' || undefined) && $page.params.albumId;
-
-    const isShare = $page.route.id === '/(user)/share/[key]' || undefined;
-    if (isShare) {
-      dragAndDropFilesStore.set({ isDragging: true, files: filesArray });
-    } else {
-      await fileUploadHandler(filesArray, albumId);
-    }
-  };
 </script>
 
 <svelte:head>
   <title>{$page.data.meta?.title || 'Web'} - Immich</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="currentColor" />
-  <FaviconHeader />
   <AppleHeader />
 
   {#if $page.data.meta}
@@ -93,20 +112,16 @@
   </FullscreenContainer>
 </noscript>
 
+<slot />
+
 {#if showNavigationLoadingBar}
   <NavigationLoadingBar />
 {/if}
-
-<slot {albumId} />
 
 <DownloadPanel />
 <UploadPanel />
 <NotificationList />
 
-{#if data.user?.isAdmin}
-  <VersionAnnouncementBox serverVersion={data.serverVersion} />
-{/if}
-
-{#if $page.route.id?.includes('(user)')}
-  <UploadCover {dropHandler} />
+{#if $user?.isAdmin}
+  <VersionAnnouncementBox />
 {/if}

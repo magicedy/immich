@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -27,6 +27,7 @@ class DownloadInfoDto {
   ///
   String? albumId;
 
+  /// Minimum value: 1
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
   /// does not include a default value (using the "default:" property), however, the generated
@@ -47,10 +48,10 @@ class DownloadInfoDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is DownloadInfoDto &&
-     other.albumId == albumId &&
-     other.archiveSize == archiveSize &&
-     other.assetIds == assetIds &&
-     other.userId == userId;
+    other.albumId == albumId &&
+    other.archiveSize == archiveSize &&
+    _deepEquality.equals(other.assetIds, assetIds) &&
+    other.userId == userId;
 
   @override
   int get hashCode =>
@@ -94,8 +95,8 @@ class DownloadInfoDto {
       return DownloadInfoDto(
         albumId: mapValueOfType<String>(json, r'albumId'),
         archiveSize: mapValueOfType<int>(json, r'archiveSize'),
-        assetIds: json[r'assetIds'] is List
-            ? (json[r'assetIds'] as List).cast<String>()
+        assetIds: json[r'assetIds'] is Iterable
+            ? (json[r'assetIds'] as Iterable).cast<String>().toList(growable: false)
             : const [],
         userId: mapValueOfType<String>(json, r'userId'),
       );

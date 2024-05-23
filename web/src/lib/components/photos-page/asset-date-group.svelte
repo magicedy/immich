@@ -1,19 +1,22 @@
 <script lang="ts">
+  import Icon from '$lib/components/elements/icon.svelte';
+  import type { AssetInteractionStore } from '$lib/stores/asset-interaction.store';
+  import { assetViewingStore } from '$lib/stores/asset-viewing.store';
+  import type { AssetStore, Viewport } from '$lib/stores/assets.store';
   import { locale } from '$lib/stores/preferences.store';
   import { getAssetRatio } from '$lib/utils/asset-utils';
-  import { formatGroupTitle, splitBucketIntoDateGroups } from '$lib/utils/timeline-util';
-  import type { AssetResponseDto } from '@api';
+  import {
+    calculateWidth,
+    formatGroupTitle,
+    fromLocalDateTime,
+    splitBucketIntoDateGroups,
+  } from '$lib/utils/timeline-util';
+  import type { AssetResponseDto } from '@immich/sdk';
+  import { mdiCheckCircle, mdiCircleOutline } from '@mdi/js';
   import justifiedLayout from 'justified-layout';
-  import { DateTime } from 'luxon';
   import { createEventDispatcher } from 'svelte';
-  import CheckCircle from 'svelte-material-icons/CheckCircle.svelte';
-  import CircleOutline from 'svelte-material-icons/CircleOutline.svelte';
   import { fly } from 'svelte/transition';
   import Thumbnail from '../assets/thumbnail/thumbnail.svelte';
-  import { assetViewingStore } from '$lib/stores/asset-viewing.store';
-  import type { AssetStore } from '$lib/stores/assets.store';
-  import type { AssetInteractionStore } from '$lib/stores/asset-interaction.store';
-  import type { Viewport } from '$lib/stores/assets.store';
 
   export let assets: AssetResponseDto[];
   export let bucketDate: string;
@@ -21,6 +24,8 @@
   export let isSelectionMode = false;
   export let viewport: Viewport;
   export let singleSelect = false;
+  export let withStacked = false;
+  export let showArchiveIcon = false;
 
   export let assetStore: AssetStore;
   export let assetInteractionStore: AssetInteractionStore;
@@ -37,24 +42,21 @@
   let actualBucketHeight: number;
   let hoveredDateGroup = '';
 
-  interface LayoutBox {
-    top: number;
-    left: number;
-    width: number;
-  }
-
   $: assetsGroupByDate = splitBucketIntoDateGroups(assets, $locale);
 
   $: geometry = (() => {
     const geometry = [];
     for (let group of assetsGroupByDate) {
-      const justifiedLayoutResult = justifiedLayout(group.map(getAssetRatio), {
-        boxSpacing: 2,
-        containerWidth: Math.floor(viewport.width),
-        containerPadding: 0,
-        targetRowHeightTolerance: 0.15,
-        targetRowHeight: 235,
-      });
+      const justifiedLayoutResult = justifiedLayout(
+        group.map((assetGroup) => getAssetRatio(assetGroup)),
+        {
+          boxSpacing: 2,
+          containerWidth: Math.floor(viewport.width),
+          containerPadding: 0,
+          targetRowHeightTolerance: 0.15,
+          targetRowHeight: 235,
+        },
+      );
       geometry.push({
         ...justifiedLayoutResult,
         containerWidth: calculateWidth(justifiedLayoutResult.boxes),
@@ -78,24 +80,13 @@
     });
   }
 
-  const calculateWidth = (boxes: LayoutBox[]): number => {
-    let width = 0;
-    for (const box of boxes) {
-      if (box.top < 100) {
-        width = box.left + box.width;
-      }
-    }
-
-    return width;
-  };
-
   const assetClickHandler = (asset: AssetResponseDto, assetsInDateGroup: AssetResponseDto[], groupTitle: string) => {
     if (isSelectionMode || $isMultiSelectState) {
       assetSelectHandler(asset, assetsInDateGroup, groupTitle);
       return;
     }
 
-    assetViewingStore.setAssetId(asset.id);
+    assetViewingStore.setAsset(asset);
   };
 
   const handleSelectGroup = (title: string, assets: AssetResponseDto[]) => dispatch('select', { title, assets });
@@ -126,12 +117,13 @@
 
 <section id="asset-group-by-date" class="flex flex-wrap gap-x-12" bind:clientHeight={actualBucketHeight}>
   {#each assetsGroupByDate as groupAssets, groupIndex (groupAssets[0].id)}
-    {@const groupTitle = formatGroupTitle(DateTime.fromISO(groupAssets[0].fileCreatedAt).startOf('day'))}
+    {@const asset = groupAssets[0]}
+    {@const groupTitle = formatGroupTitle(fromLocalDateTime(asset.localDateTime).startOf('day'))}
     <!-- Asset Group By Date -->
 
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-      class="mt-5 flex flex-col"
+      class="flex flex-col"
       on:mouseenter={() => {
         isMouseOverGroup = true;
         assetMouseEventHandler(groupTitle, null);
@@ -142,8 +134,8 @@
       }}
     >
       <!-- Date group title -->
-      <p
-        class="mb-2 flex h-6 place-items-center text-xs font-medium text-immich-fg dark:text-immich-dark-fg md:text-sm"
+      <div
+        class="flex z-[100] sticky top-0 pt-7 pb-5 h-6 place-items-center text-xs font-medium text-immich-fg bg-immich-bg dark:bg-immich-dark-bg dark:text-immich-dark-fg md:text-sm"
         style="width: {geometry[groupIndex].containerWidth}px"
       >
         {#if !singleSelect && ((hoveredDateGroup == groupTitle && isMouseOverGroup) || $selectedGroup.has(groupTitle))}
@@ -154,17 +146,17 @@
             on:keydown={() => handleSelectGroup(groupTitle, groupAssets)}
           >
             {#if $selectedGroup.has(groupTitle)}
-              <CheckCircle size="24" color="#4250af" />
+              <Icon path={mdiCheckCircle} size="24" color="#4250af" />
             {:else}
-              <CircleOutline size="24" color="#757575" />
+              <Icon path={mdiCircleOutline} size="24" color="#757575" />
             {/if}
           </div>
         {/if}
 
-        <span class="truncate first-letter:capitalize" title={groupTitle}>
+        <span class="w-full truncate first-letter:capitalize" title={groupTitle}>
           {groupTitle}
         </span>
-      </p>
+      </div>
 
       <!-- Image grid -->
       <div
@@ -178,9 +170,11 @@
             style="width: {box.width}px; height: {box.height}px; top: {box.top}px; left: {box.left}px"
           >
             <Thumbnail
+              showStackedIcon={withStacked}
+              {showArchiveIcon}
               {asset}
               {groupIndex}
-              on:click={() => assetClickHandler(asset, groupAssets, groupTitle)}
+              onClick={() => assetClickHandler(asset, groupAssets, groupTitle)}
               on:select={() => assetSelectHandler(asset, groupAssets, groupTitle)}
               on:mouse-event={() => assetMouseEventHandler(groupTitle, asset)}
               selected={$selectedAssets.has(asset) || $assetStore.albumAssets.has(asset.id)}

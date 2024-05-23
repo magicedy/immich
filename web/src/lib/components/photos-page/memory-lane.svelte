@@ -1,20 +1,20 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { DateTime } from 'luxon';
-  import { api } from '@api';
-  import ChevronLeft from 'svelte-material-icons/ChevronLeft.svelte';
-  import ChevronRight from 'svelte-material-icons/ChevronRight.svelte';
-  import { memoryStore } from '$lib/stores/memory.store';
   import { goto } from '$app/navigation';
+  import Icon from '$lib/components/elements/icon.svelte';
+  import { AppRoute, QueryParameter } from '$lib/constants';
+  import { memoryStore } from '$lib/stores/memory.store';
+  import { getAssetThumbnailUrl, memoryLaneTitle } from '$lib/utils';
+  import { getAltText } from '$lib/utils/thumbnail-util';
+  import { ThumbnailFormat, getMemoryLane } from '@immich/sdk';
+  import { mdiChevronLeft, mdiChevronRight } from '@mdi/js';
+  import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
   $: shouldRender = $memoryStore?.length > 0;
 
   onMount(async () => {
-    const { data } = await api.assetApi.getMemoryLane({
-      timestamp: DateTime.local().startOf('day').toISO() || '',
-    });
-    $memoryStore = data;
+    const localTime = new Date();
+    $memoryStore = await getMemoryLane({ month: localTime.getMonth() + 1, day: localTime.getDate() });
   });
 
   let memoryLaneElement: HTMLElement;
@@ -49,7 +49,7 @@
               class="rounded-full border border-gray-500 bg-gray-100 p-2 text-gray-500 opacity-50 hover:opacity-100"
               on:click={scrollLeft}
             >
-              <ChevronLeft size="36" /></button
+              <Icon path={mdiChevronLeft} size="36" /></button
             >
           </div>
         {/if}
@@ -59,30 +59,33 @@
               class="rounded-full border border-gray-500 bg-gray-100 p-2 text-gray-500 opacity-50 hover:opacity-100"
               on:click={scrollRight}
             >
-              <ChevronRight size="36" /></button
+              <Icon path={mdiChevronRight} size="36" /></button
             >
           </div>
         {/if}
       </div>
     {/if}
-
     <div class="inline-block" bind:offsetWidth={innerWidth}>
-      {#each $memoryStore as memory, i (memory.title)}
-        <button
-          class="memory-card relative mr-8 inline-block aspect-video h-[215px] rounded-xl"
-          on:click={() => goto(`/memory?memory=${i}`)}
-        >
-          <img
-            class="h-full w-full rounded-xl object-cover"
-            src={api.getAssetThumbnailUrl(memory.assets[0].id, 'JPEG')}
-            alt={memory.title}
-            draggable="false"
-          />
-          <p class="absolute bottom-2 left-4 z-10 text-lg text-white">{memory.title}</p>
-          <div
-            class="absolute left-0 top-0 z-0 h-full w-full rounded-xl bg-gradient-to-t from-black/40 via-transparent to-transparent transition-all hover:bg-black/20"
-          />
-        </button>
+      {#each $memoryStore as memory, index (memory.yearsAgo)}
+        {#if memory.assets.length > 0}
+          <button
+            class="memory-card relative mr-8 inline-block aspect-video h-[215px] rounded-xl"
+            on:click={() => goto(`${AppRoute.MEMORY}?${QueryParameter.MEMORY_INDEX}=${index}`)}
+          >
+            <img
+              class="h-full w-full rounded-xl object-cover"
+              src={getAssetThumbnailUrl(memory.assets[0].id, ThumbnailFormat.Webp)}
+              alt={`Memory Lane ${getAltText(memory.assets[0])}`}
+              draggable="false"
+            />
+            <p class="absolute bottom-2 left-4 z-10 text-lg text-white">
+              {memoryLaneTitle(memory.yearsAgo)}
+            </p>
+            <div
+              class="absolute left-0 top-0 z-0 h-full w-full rounded-xl bg-gradient-to-t from-black/40 via-transparent to-transparent transition-all hover:bg-black/20"
+            />
+          </button>
+        {/if}
       {/each}
     </div>
   </section>
@@ -90,6 +93,8 @@
 
 <style>
   .memory-card {
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    box-shadow:
+      rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
+      rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
   }
 </style>

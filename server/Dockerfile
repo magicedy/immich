@@ -1,64 +1,66 @@
-FROM node:18-bookworm@sha256:c85dc4392f44f5de1d0d72dd20a088a542734445f99bed7aa8ac895c706d370d as builder
+# dev build
+FROM ghcr.io/immich-app/base-server-dev:20240521@sha256:1558bd68efc2c3a4bb4968428abd66b992a41a76afc1dbb601d2a7ea2a1f7c9a as dev
 
+RUN apt-get install --no-install-recommends -yqq tini
 WORKDIR /usr/src/app
+COPY server/package.json server/package-lock.json ./
+RUN npm ci && \
+    # exiftool-vendored.pl, sharp-linux-x64 and sharp-linux-arm64 are the only ones we need
+    # they're marked as optional dependencies, so we need to copy them manually after pruning
+    rm -rf node_modules/@img/sharp-libvips* && \
+    rm -rf node_modules/@img/sharp-linuxmusl-x64
+COPY server .
+ENV PATH="${PATH}:/usr/src/app/bin" \
+    IMMICH_ENV=development \
+    NVIDIA_DRIVER_CAPABILITIES=all \
+    NVIDIA_VISIBLE_DEVICES=all
+ENTRYPOINT ["tini", "--", "/bin/sh"]
 
-COPY bin/install-ffmpeg.sh build-lock.json ./
-RUN sed -i -e's/ main/ main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources
-RUN apt-get update && apt-get install -yqq build-essential ninja-build meson pkg-config jq zlib1g autoconf \
-libglib2.0-dev libexpat1-dev librsvg2-dev libexif-dev libwebp-dev liborc-0.4-dev \
-libjpeg62-turbo-dev libgsf-1-dev libspng-dev libjxl-dev libheif-dev liblcms2-2 \
-mesa-va-drivers libmimalloc2.0 $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) \
-&& ./install-ffmpeg.sh && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# debian build for imagemagick has broken RAW support, so build manually
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-ENV LD_RUN_PATH=/usr/local/lib:$LD_RUN_PATH
-COPY bin/build-libraw.sh bin/build-imagemagick.sh bin/build-libvips.sh bin/use-camera-wb.patch ./
-RUN ./build-libraw.sh
-RUN ./build-imagemagick.sh
-RUN ./build-libvips.sh
-
-COPY package.json package-lock.json ./
-
-RUN npm ci
-
-COPY . .
-
-FROM builder as prod
+FROM dev AS prod
 
 RUN npm run build
 RUN npm prune --omit=dev --omit=optional
+COPY --from=dev /usr/src/app/node_modules/@img ./node_modules/@img
+COPY --from=dev /usr/src/app/node_modules/exiftool-vendored.pl ./node_modules/exiftool-vendored.pl
 
-FROM node:18-bookworm-slim@sha256:a0cca98f2896135d4c0386922211c1f90f98f27a58b8f2c07850d0fbe1c2104e
+# web build
+FROM node:iron-alpine3.18@sha256:53108f67824964a573ea435fed258f6cee4d88343e9859a99d356883e71b490c as web
 
-ENV NODE_ENV=production
+WORKDIR /usr/src/open-api/typescript-sdk
+COPY open-api/typescript-sdk/package*.json open-api/typescript-sdk/tsconfig*.json ./
+RUN npm ci
+COPY open-api/typescript-sdk/ ./
+RUN npm run build
 
 WORKDIR /usr/src/app
+COPY web/package*.json web/svelte.config.js ./
+RUN npm ci
+COPY web ./
+RUN npm run build
 
-COPY bin/install-ffmpeg.sh build-lock.json ./
-RUN sed -i -e's/ main/ main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources
-RUN apt-get update && apt-get install -yqq tini libheif1 libwebp7 libwebpdemux2 libwebpmux3 mesa-va-drivers \
-libjpeg62-turbo libexpat1 librsvg2-2 libjxl0.7 libspng0 libexif12 libgcc-s1 libglib2.0-0 \
-libgsf-1-114 libopenjp2-7 liblcms2-2 liborc-0.4-0 libopenexr-3-1-30 liblqr-1-0 libltdl7 zlib1g libgomp1 \
-mesa-va-drivers libmimalloc2.0 $(if [ $(arch) = "x86_64" ]; then echo "intel-media-va-driver-non-free"; fi) jq wget \
-&& ./install-ffmpeg.sh && apt-get remove -yqq jq wget && apt-get autoremove -yqq && apt-get clean && rm -rf /var/lib/apt/lists/* \
-&& rm install-ffmpeg.sh && rm build-lock.json
 
-COPY --from=prod /usr/local/lib/ /usr/local/lib/
-RUN ldconfig /usr/local/lib
+# prod build
+FROM ghcr.io/immich-app/base-server-prod:20240521@sha256:894e6dff5617062c03e65d44d946169a60df51e232b63b6f38bac1c0d168d989
 
+WORKDIR /usr/src/app
+ENV NODE_ENV=production \
+    NVIDIA_DRIVER_CAPABILITIES=all \
+    NVIDIA_VISIBLE_DEVICES=all
 COPY --from=prod /usr/src/app/node_modules ./node_modules
 COPY --from=prod /usr/src/app/dist ./dist
 COPY --from=prod /usr/src/app/bin ./bin
-
+COPY --from=web /usr/src/app/build ./www
+COPY server/resources resources
+COPY server/package.json server/package-lock.json ./
+COPY server/start*.sh ./
+RUN npm link && npm install -g @immich/cli && npm cache clean --force
 COPY LICENSE /licenses/LICENSE.txt
 COPY LICENSE /LICENSE
-COPY package.json package-lock.json ./
-COPY start*.sh ./
-
-RUN npm link && npm cache clean --force
+ENV PATH="${PATH}:/usr/src/app/bin"
 VOLUME /usr/src/app/upload
-
 EXPOSE 3001
+ENTRYPOINT ["tini", "--", "/bin/bash"]
+CMD ["start.sh"]
 
-ENTRYPOINT ["tini", "--", "/bin/sh"]
+HEALTHCHECK CMD npm run healthcheck

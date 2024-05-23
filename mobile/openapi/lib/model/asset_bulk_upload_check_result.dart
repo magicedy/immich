@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -35,10 +35,10 @@ class AssetBulkUploadCheckResult {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is AssetBulkUploadCheckResult &&
-     other.action == action &&
-     other.assetId == assetId &&
-     other.id == id &&
-     other.reason == reason;
+    other.action == action &&
+    other.assetId == assetId &&
+    other.id == id &&
+    other.reason == reason;
 
   @override
   int get hashCode =>
@@ -156,7 +156,7 @@ class AssetBulkUploadCheckResultActionEnum {
 
   static AssetBulkUploadCheckResultActionEnum? fromJson(dynamic value) => AssetBulkUploadCheckResultActionEnumTypeTransformer().decode(value);
 
-  static List<AssetBulkUploadCheckResultActionEnum>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<AssetBulkUploadCheckResultActionEnum> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <AssetBulkUploadCheckResultActionEnum>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -230,7 +230,7 @@ class AssetBulkUploadCheckResultReasonEnum {
 
   static AssetBulkUploadCheckResultReasonEnum? fromJson(dynamic value) => AssetBulkUploadCheckResultReasonEnumTypeTransformer().decode(value);
 
-  static List<AssetBulkUploadCheckResultReasonEnum>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<AssetBulkUploadCheckResultReasonEnum> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <AssetBulkUploadCheckResultReasonEnum>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {

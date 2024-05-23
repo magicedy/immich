@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -15,11 +15,12 @@ class SharedLinkCreateDto {
   SharedLinkCreateDto({
     this.albumId,
     this.allowDownload = true,
-    this.allowUpload = false,
+    this.allowUpload,
     this.assetIds = const [],
     this.description,
     this.expiresAt,
-    this.showExif = true,
+    this.password,
+    this.showMetadata = true,
     required this.type,
   });
 
@@ -33,7 +34,13 @@ class SharedLinkCreateDto {
 
   bool allowDownload;
 
-  bool allowUpload;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? allowUpload;
 
   List<String> assetIds;
 
@@ -47,35 +54,45 @@ class SharedLinkCreateDto {
 
   DateTime? expiresAt;
 
-  bool showExif;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? password;
+
+  bool showMetadata;
 
   SharedLinkType type;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is SharedLinkCreateDto &&
-     other.albumId == albumId &&
-     other.allowDownload == allowDownload &&
-     other.allowUpload == allowUpload &&
-     other.assetIds == assetIds &&
-     other.description == description &&
-     other.expiresAt == expiresAt &&
-     other.showExif == showExif &&
-     other.type == type;
+    other.albumId == albumId &&
+    other.allowDownload == allowDownload &&
+    other.allowUpload == allowUpload &&
+    _deepEquality.equals(other.assetIds, assetIds) &&
+    other.description == description &&
+    other.expiresAt == expiresAt &&
+    other.password == password &&
+    other.showMetadata == showMetadata &&
+    other.type == type;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (albumId == null ? 0 : albumId!.hashCode) +
     (allowDownload.hashCode) +
-    (allowUpload.hashCode) +
+    (allowUpload == null ? 0 : allowUpload!.hashCode) +
     (assetIds.hashCode) +
     (description == null ? 0 : description!.hashCode) +
     (expiresAt == null ? 0 : expiresAt!.hashCode) +
-    (showExif.hashCode) +
+    (password == null ? 0 : password!.hashCode) +
+    (showMetadata.hashCode) +
     (type.hashCode);
 
   @override
-  String toString() => 'SharedLinkCreateDto[albumId=$albumId, allowDownload=$allowDownload, allowUpload=$allowUpload, assetIds=$assetIds, description=$description, expiresAt=$expiresAt, showExif=$showExif, type=$type]';
+  String toString() => 'SharedLinkCreateDto[albumId=$albumId, allowDownload=$allowDownload, allowUpload=$allowUpload, assetIds=$assetIds, description=$description, expiresAt=$expiresAt, password=$password, showMetadata=$showMetadata, type=$type]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -85,7 +102,11 @@ class SharedLinkCreateDto {
     //  json[r'albumId'] = null;
     }
       json[r'allowDownload'] = this.allowDownload;
+    if (this.allowUpload != null) {
       json[r'allowUpload'] = this.allowUpload;
+    } else {
+    //  json[r'allowUpload'] = null;
+    }
       json[r'assetIds'] = this.assetIds;
     if (this.description != null) {
       json[r'description'] = this.description;
@@ -97,7 +118,12 @@ class SharedLinkCreateDto {
     } else {
     //  json[r'expiresAt'] = null;
     }
-      json[r'showExif'] = this.showExif;
+    if (this.password != null) {
+      json[r'password'] = this.password;
+    } else {
+    //  json[r'password'] = null;
+    }
+      json[r'showMetadata'] = this.showMetadata;
       json[r'type'] = this.type;
     return json;
   }
@@ -112,13 +138,14 @@ class SharedLinkCreateDto {
       return SharedLinkCreateDto(
         albumId: mapValueOfType<String>(json, r'albumId'),
         allowDownload: mapValueOfType<bool>(json, r'allowDownload') ?? true,
-        allowUpload: mapValueOfType<bool>(json, r'allowUpload') ?? false,
-        assetIds: json[r'assetIds'] is List
-            ? (json[r'assetIds'] as List).cast<String>()
+        allowUpload: mapValueOfType<bool>(json, r'allowUpload'),
+        assetIds: json[r'assetIds'] is Iterable
+            ? (json[r'assetIds'] as Iterable).cast<String>().toList(growable: false)
             : const [],
         description: mapValueOfType<String>(json, r'description'),
-        expiresAt: mapDateTime(json, r'expiresAt', ''),
-        showExif: mapValueOfType<bool>(json, r'showExif') ?? true,
+        expiresAt: mapDateTime(json, r'expiresAt', r''),
+        password: mapValueOfType<String>(json, r'password'),
+        showMetadata: mapValueOfType<bool>(json, r'showMetadata') ?? true,
         type: SharedLinkType.fromJson(json[r'type'])!,
       );
     }

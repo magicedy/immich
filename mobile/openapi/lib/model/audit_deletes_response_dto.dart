@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -23,8 +23,8 @@ class AuditDeletesResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is AuditDeletesResponseDto &&
-     other.ids == ids &&
-     other.needsFullSync == needsFullSync;
+    _deepEquality.equals(other.ids, ids) &&
+    other.needsFullSync == needsFullSync;
 
   @override
   int get hashCode =>
@@ -50,8 +50,8 @@ class AuditDeletesResponseDto {
       final json = value.cast<String, dynamic>();
 
       return AuditDeletesResponseDto(
-        ids: json[r'ids'] is List
-            ? (json[r'ids'] as List).cast<String>()
+        ids: json[r'ids'] is Iterable
+            ? (json[r'ids'] as Iterable).cast<String>().toList(growable: false)
             : const [],
         needsFullSync: mapValueOfType<bool>(json, r'needsFullSync')!,
       );

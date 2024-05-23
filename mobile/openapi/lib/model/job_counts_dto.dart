@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -35,12 +35,12 @@ class JobCountsDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is JobCountsDto &&
-     other.active == active &&
-     other.completed == completed &&
-     other.delayed == delayed &&
-     other.failed == failed &&
-     other.paused == paused &&
-     other.waiting == waiting;
+    other.active == active &&
+    other.completed == completed &&
+    other.delayed == delayed &&
+    other.failed == failed &&
+    other.paused == paused &&
+    other.waiting == waiting;
 
   @override
   int get hashCode =>

@@ -1,27 +1,53 @@
-import { bootstrap as adminCli } from './admin-cli/main';
-import { bootstrap as immich } from './immich/main';
-import { bootstrap as microservices } from './microservices/main';
-
+import { CommandFactory } from 'nest-commander';
+import { Worker } from 'node:worker_threads';
+import { ImmichAdminModule } from 'src/app.module';
+import { LogLevel } from 'src/config';
+import { getWorkers } from 'src/utils/workers';
 const immichApp = process.argv[2] || process.env.IMMICH_APP;
 
 if (process.argv[2] === immichApp) {
   process.argv.splice(2, 1);
 }
 
+async function bootstrapImmichAdmin() {
+  process.env.IMMICH_LOG_LEVEL = LogLevel.WARN;
+  await CommandFactory.run(ImmichAdminModule);
+}
+
+function bootstrapWorker(name: string) {
+  console.log(`Starting ${name} worker`);
+  const worker = new Worker(`./dist/workers/${name}.js`);
+  worker.on('exit', (exitCode) => {
+    if (exitCode !== 0) {
+      console.error(`${name} worker exited with code ${exitCode}`);
+      process.exit(exitCode);
+    }
+  });
+}
+
 function bootstrap() {
   switch (immichApp) {
-    case 'immich':
-      process.title = 'immich_server';
-      return immich();
-    case 'microservices':
-      process.title = 'immich_microservices';
-      return microservices();
-    case 'admin-cli':
+    case 'immich-admin': {
       process.title = 'immich_admin_cli';
-      return adminCli();
-    default:
-      console.log(`Invalid app name: ${immichApp}. Expected one of immich|microservices|cli`);
-      process.exit(1);
+      return bootstrapImmichAdmin();
+    }
+    case 'immich': {
+      if (!process.env.IMMICH_WORKERS_INCLUDE) {
+        process.env.IMMICH_WORKERS_INCLUDE = 'api';
+      }
+      break;
+    }
+    case 'microservices': {
+      if (!process.env.IMMICH_WORKERS_INCLUDE) {
+        process.env.IMMICH_WORKERS_INCLUDE = 'microservices';
+      }
+      break;
+    }
+  }
+  process.title = 'immich';
+  for (const worker of getWorkers()) {
+    bootstrapWorker(worker);
   }
 }
-bootstrap();
+
+void bootstrap();

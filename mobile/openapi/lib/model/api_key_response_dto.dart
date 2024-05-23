@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -29,10 +29,10 @@ class APIKeyResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is APIKeyResponseDto &&
-     other.createdAt == createdAt &&
-     other.id == id &&
-     other.name == name &&
-     other.updatedAt == updatedAt;
+    other.createdAt == createdAt &&
+    other.id == id &&
+    other.name == name &&
+    other.updatedAt == updatedAt;
 
   @override
   int get hashCode =>
@@ -62,10 +62,10 @@ class APIKeyResponseDto {
       final json = value.cast<String, dynamic>();
 
       return APIKeyResponseDto(
-        createdAt: mapDateTime(json, r'createdAt', '')!,
+        createdAt: mapDateTime(json, r'createdAt', r'')!,
         id: mapValueOfType<String>(json, r'id')!,
         name: mapValueOfType<String>(json, r'name')!,
-        updatedAt: mapDateTime(json, r'updatedAt', '')!,
+        updatedAt: mapDateTime(json, r'updatedAt', r'')!,
       );
     }
     return null;

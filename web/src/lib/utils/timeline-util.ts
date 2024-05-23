@@ -1,6 +1,11 @@
-import type { AssetResponseDto } from '@api';
-import lodash from 'lodash-es';
+import { locale } from '$lib/stores/preferences.store';
+import type { AssetResponseDto } from '@immich/sdk';
+import { groupBy, sortBy } from 'lodash-es';
 import { DateTime, Interval } from 'luxon';
+import { get } from 'svelte/store';
+
+export const fromLocalDateTime = (localDateTime: string) =>
+  DateTime.fromISO(localDateTime, { zone: 'UTC', locale: get(locale) });
 
 export const groupDateFormat: Intl.DateTimeFormatOptions = {
   weekday: 'short',
@@ -43,9 +48,25 @@ export function splitBucketIntoDateGroups(
   assets: AssetResponseDto[],
   locale: string | undefined,
 ): AssetResponseDto[][] {
-  return lodash
-    .chain(assets)
-    .groupBy((a) => new Date(a.fileCreatedAt).toLocaleDateString(locale, groupDateFormat))
-    .sortBy((group) => assets.indexOf(group[0]))
-    .value();
+  const grouped = groupBy(assets, (asset) =>
+    fromLocalDateTime(asset.localDateTime).toLocaleString(groupDateFormat, { locale }),
+  );
+  return sortBy(grouped, (group) => assets.indexOf(group[0]));
+}
+
+export type LayoutBox = {
+  top: number;
+  left: number;
+  width: number;
+};
+
+export function calculateWidth(boxes: LayoutBox[]): number {
+  let width = 0;
+  for (const box of boxes) {
+    if (box.top < 100) {
+      width = box.left + box.width;
+    }
+  }
+
+  return width;
 }

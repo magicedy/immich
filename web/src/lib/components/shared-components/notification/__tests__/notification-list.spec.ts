@@ -1,8 +1,7 @@
-import { describe, it, jest } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { render, RenderResult, waitFor } from '@testing-library/svelte';
+import { render, waitFor, type RenderResult } from '@testing-library/svelte';
 import { get } from 'svelte/store';
-import { notificationController, NotificationType } from '../notification';
+import { NotificationType, notificationController } from '../notification';
 import NotificationList from '../notification-list.svelte';
 
 function _getNotificationListElement(sut: RenderResult<NotificationList>): HTMLAnchorElement | null {
@@ -13,11 +12,14 @@ describe('NotificationList component', () => {
   const sut: RenderResult<NotificationList> = render(NotificationList);
 
   beforeAll(() => {
-    jest.useFakeTimers();
+    // https://testing-library.com/docs/svelte-testing-library/faq#why-arent-transition-events-running
+    vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => {
+      setTimeout(() => fn(Date.now()), 16);
+    });
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('shows a notification when added and closes it automatically after the delay timeout', async () => {
@@ -26,17 +28,14 @@ describe('NotificationList component', () => {
     notificationController.show({
       message: 'Notification',
       type: NotificationType.Info,
-      timeout: 3000,
+      timeout: 1,
     });
 
     await waitFor(() => expect(_getNotificationListElement(sut)).toBeInTheDocument());
-
-    expect(_getNotificationListElement(sut)?.children).toHaveLength(1);
-
-    jest.advanceTimersByTime(3000);
-    // due to some weirdness in svelte (or testing-library) need to check if it has been removed from the store to make sure it works.
-    expect(get(notificationController.notificationList)).toHaveLength(0);
+    await waitFor(() => expect(_getNotificationListElement(sut)?.children).toHaveLength(1));
+    expect(get(notificationController.notificationList)).toHaveLength(1);
 
     await waitFor(() => expect(_getNotificationListElement(sut)).not.toBeInTheDocument());
+    expect(get(notificationController.notificationList)).toHaveLength(0);
   });
 });

@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -20,7 +20,7 @@ class MergePersonDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is MergePersonDto &&
-     other.ids == ids;
+    _deepEquality.equals(other.ids, ids);
 
   @override
   int get hashCode =>
@@ -44,8 +44,8 @@ class MergePersonDto {
       final json = value.cast<String, dynamic>();
 
       return MergePersonDto(
-        ids: json[r'ids'] is List
-            ? (json[r'ids'] as List).cast<String>()
+        ids: json[r'ids'] is Iterable
+            ? (json[r'ids'] as Iterable).cast<String>().toList(growable: false)
             : const [],
       );
     }

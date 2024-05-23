@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -22,7 +22,9 @@ class SharedLinkResponseDto {
     required this.expiresAt,
     required this.id,
     required this.key,
-    required this.showExif,
+    required this.password,
+    required this.showMetadata,
+    this.token,
     required this.type,
     required this.userId,
   });
@@ -51,7 +53,11 @@ class SharedLinkResponseDto {
 
   String key;
 
-  bool showExif;
+  String? password;
+
+  bool showMetadata;
+
+  String? token;
 
   SharedLinkType type;
 
@@ -59,18 +65,20 @@ class SharedLinkResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is SharedLinkResponseDto &&
-     other.album == album &&
-     other.allowDownload == allowDownload &&
-     other.allowUpload == allowUpload &&
-     other.assets == assets &&
-     other.createdAt == createdAt &&
-     other.description == description &&
-     other.expiresAt == expiresAt &&
-     other.id == id &&
-     other.key == key &&
-     other.showExif == showExif &&
-     other.type == type &&
-     other.userId == userId;
+    other.album == album &&
+    other.allowDownload == allowDownload &&
+    other.allowUpload == allowUpload &&
+    _deepEquality.equals(other.assets, assets) &&
+    other.createdAt == createdAt &&
+    other.description == description &&
+    other.expiresAt == expiresAt &&
+    other.id == id &&
+    other.key == key &&
+    other.password == password &&
+    other.showMetadata == showMetadata &&
+    other.token == token &&
+    other.type == type &&
+    other.userId == userId;
 
   @override
   int get hashCode =>
@@ -84,12 +92,14 @@ class SharedLinkResponseDto {
     (expiresAt == null ? 0 : expiresAt!.hashCode) +
     (id.hashCode) +
     (key.hashCode) +
-    (showExif.hashCode) +
+    (password == null ? 0 : password!.hashCode) +
+    (showMetadata.hashCode) +
+    (token == null ? 0 : token!.hashCode) +
     (type.hashCode) +
     (userId.hashCode);
 
   @override
-  String toString() => 'SharedLinkResponseDto[album=$album, allowDownload=$allowDownload, allowUpload=$allowUpload, assets=$assets, createdAt=$createdAt, description=$description, expiresAt=$expiresAt, id=$id, key=$key, showExif=$showExif, type=$type, userId=$userId]';
+  String toString() => 'SharedLinkResponseDto[album=$album, allowDownload=$allowDownload, allowUpload=$allowUpload, assets=$assets, createdAt=$createdAt, description=$description, expiresAt=$expiresAt, id=$id, key=$key, password=$password, showMetadata=$showMetadata, token=$token, type=$type, userId=$userId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -114,7 +124,17 @@ class SharedLinkResponseDto {
     }
       json[r'id'] = this.id;
       json[r'key'] = this.key;
-      json[r'showExif'] = this.showExif;
+    if (this.password != null) {
+      json[r'password'] = this.password;
+    } else {
+    //  json[r'password'] = null;
+    }
+      json[r'showMetadata'] = this.showMetadata;
+    if (this.token != null) {
+      json[r'token'] = this.token;
+    } else {
+    //  json[r'token'] = null;
+    }
       json[r'type'] = this.type;
       json[r'userId'] = this.userId;
     return json;
@@ -132,12 +152,14 @@ class SharedLinkResponseDto {
         allowDownload: mapValueOfType<bool>(json, r'allowDownload')!,
         allowUpload: mapValueOfType<bool>(json, r'allowUpload')!,
         assets: AssetResponseDto.listFromJson(json[r'assets']),
-        createdAt: mapDateTime(json, r'createdAt', '')!,
+        createdAt: mapDateTime(json, r'createdAt', r'')!,
         description: mapValueOfType<String>(json, r'description'),
-        expiresAt: mapDateTime(json, r'expiresAt', ''),
+        expiresAt: mapDateTime(json, r'expiresAt', r''),
         id: mapValueOfType<String>(json, r'id')!,
         key: mapValueOfType<String>(json, r'key')!,
-        showExif: mapValueOfType<bool>(json, r'showExif')!,
+        password: mapValueOfType<String>(json, r'password'),
+        showMetadata: mapValueOfType<bool>(json, r'showMetadata')!,
+        token: mapValueOfType<String>(json, r'token'),
         type: SharedLinkType.fromJson(json[r'type'])!,
         userId: mapValueOfType<String>(json, r'userId')!,
       );
@@ -195,7 +217,8 @@ class SharedLinkResponseDto {
     'expiresAt',
     'id',
     'key',
-    'showExif',
+    'password',
+    'showMetadata',
     'type',
     'userId',
   };

@@ -1,49 +1,56 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  import { AssetApiGetAssetStatsRequest, api } from '@api';
-  import AccountMultipleOutline from 'svelte-material-icons/AccountMultipleOutline.svelte';
-  import AccountMultiple from 'svelte-material-icons/AccountMultiple.svelte';
-  import ImageAlbum from 'svelte-material-icons/ImageAlbum.svelte';
-  import ImageMultipleOutline from 'svelte-material-icons/ImageMultipleOutline.svelte';
-  import ImageMultiple from 'svelte-material-icons/ImageMultiple.svelte';
-  import ArchiveArrowDownOutline from 'svelte-material-icons/ArchiveArrowDownOutline.svelte';
-  import Magnify from 'svelte-material-icons/Magnify.svelte';
-  import Map from 'svelte-material-icons/Map.svelte';
-  import HeartMultipleOutline from 'svelte-material-icons/HeartMultipleOutline.svelte';
-  import HeartMultiple from 'svelte-material-icons/HeartMultiple.svelte';
-  import { AppRoute } from '../../../constants';
+  import { locale, sidebarSettings } from '$lib/stores/preferences.store';
+  import { featureFlags } from '$lib/stores/server-config.store';
+  import { getAlbumCount, getAssetStatistics } from '@immich/sdk';
+  import {
+    mdiAccount,
+    mdiAccountOutline,
+    mdiAccountMultiple,
+    mdiAccountMultipleOutline,
+    mdiArchiveArrowDown,
+    mdiArchiveArrowDownOutline,
+    mdiHeart,
+    mdiHeartOutline,
+    mdiImageAlbum,
+    mdiImageMultiple,
+    mdiImageMultipleOutline,
+    mdiMagnify,
+    mdiMap,
+    mdiMapOutline,
+    mdiTrashCan,
+    mdiTrashCanOutline,
+  } from '@mdi/js';
   import LoadingSpinner from '../loading-spinner.svelte';
   import StatusBox from '../status-box.svelte';
-  import SideBarButton from './side-bar-button.svelte';
-  import { locale } from '$lib/stores/preferences.store';
   import SideBarSection from './side-bar-section.svelte';
-  import { featureFlags } from '$lib/stores/server-config.store';
+  import SideBarLink from './side-bar-link.svelte';
 
-  const getStats = async (dto: AssetApiGetAssetStatsRequest) => {
-    const { data: stats } = await api.assetApi.getAssetStats(dto);
-    return stats;
-  };
+  const getStats = (dto: Parameters<typeof getAssetStatistics>[0]) => getAssetStatistics(dto);
 
-  const getAlbumCount = async () => {
+  const handleAlbumCount = async () => {
     try {
-      const { data: albumCount } = await api.albumApi.getAlbumCount();
-      return albumCount;
+      return await getAlbumCount();
     } catch {
       return { owned: 0, shared: 0, notShared: 0 };
     }
   };
 
-  const isFavoritesSelected = $page.route.id === '/(user)/favorites';
-  const isPhotosSelected = $page.route.id === '/(user)/photos';
-  const isSharingSelected = $page.route.id === '/(user)/sharing';
+  let isArchiveSelected: boolean;
+  let isFavoritesSelected: boolean;
+  let isMapSelected: boolean;
+  let isPeopleSelected: boolean;
+  let isPhotosSelected: boolean;
+  let isSharingSelected: boolean;
+  let isTrashSelected: boolean;
 </script>
 
 <SideBarSection>
-  <a data-sveltekit-preload-data="hover" data-sveltekit-noscroll href={AppRoute.PHOTOS} draggable="false">
-    <SideBarButton
+  <nav aria-label="Primary">
+    <SideBarLink
       title="Photos"
-      logo={isPhotosSelected ? ImageMultiple : ImageMultipleOutline}
-      isSelected={isPhotosSelected}
+      routeId="/(user)/photos"
+      bind:isSelected={isPhotosSelected}
+      icon={isPhotosSelected ? mdiImageMultiple : mdiImageMultipleOutline}
     >
       <svelte:fragment slot="moreInformation">
         {#await getStats({ isArchived: false })}
@@ -55,45 +62,56 @@
           </div>
         {/await}
       </svelte:fragment>
-    </SideBarButton>
-  </a>
-  {#if $featureFlags.search}
-    <a data-sveltekit-preload-data="hover" data-sveltekit-noscroll href={AppRoute.EXPLORE} draggable="false">
-      <SideBarButton title="Explore" logo={Magnify} isSelected={$page.route.id === '/(user)/explore'} />
-    </a>
-  {/if}
-  {#if $featureFlags.map}
-    <a data-sveltekit-preload-data="hover" href={AppRoute.MAP} draggable="false">
-      <SideBarButton title="Map" logo={Map} isSelected={$page.route.id === '/(user)/map'} />
-    </a>
-  {/if}
-  <a data-sveltekit-preload-data="hover" href={AppRoute.SHARING} draggable="false">
-    <SideBarButton
-      title="Sharing"
-      logo={isSharingSelected ? AccountMultiple : AccountMultipleOutline}
-      isSelected={isSharingSelected}
-    >
-      <svelte:fragment slot="moreInformation">
-        {#await getAlbumCount()}
-          <LoadingSpinner />
-        {:then data}
-          <div>
-            <p>{data.shared.toLocaleString($locale)} Albums</p>
-          </div>
-        {/await}
-      </svelte:fragment>
-    </SideBarButton>
-  </a>
+    </SideBarLink>
+    {#if $featureFlags.search}
+      <SideBarLink title="Explore" routeId="/(user)/explore" icon={mdiMagnify} />
+    {/if}
 
-  <div class="text-xs transition-all duration-200 dark:text-immich-dark-fg">
-    <p class="hidden p-6 group-hover:sm:block md:block">LIBRARY</p>
-    <hr class="mx-4 mb-[31px] mt-8 block group-hover:sm:hidden md:hidden" />
-  </div>
-  <a data-sveltekit-preload-data="hover" href={AppRoute.FAVORITES} draggable="false">
-    <SideBarButton
+    {#if $featureFlags.map}
+      <SideBarLink
+        title="Map"
+        routeId="/(user)/map"
+        bind:isSelected={isMapSelected}
+        icon={isMapSelected ? mdiMap : mdiMapOutline}
+      />
+    {/if}
+
+    {#if $sidebarSettings.people}
+      <SideBarLink
+        title="People"
+        routeId="/(user)/people"
+        bind:isSelected={isPeopleSelected}
+        icon={isPeopleSelected ? mdiAccount : mdiAccountOutline}
+      />
+    {/if}
+    {#if $sidebarSettings.sharing}
+      <SideBarLink
+        title="Sharing"
+        routeId="/(user)/sharing"
+        icon={isSharingSelected ? mdiAccountMultiple : mdiAccountMultipleOutline}
+        bind:isSelected={isSharingSelected}
+      >
+        <svelte:fragment slot="moreInformation">
+          {#await handleAlbumCount()}
+            <LoadingSpinner />
+          {:then data}
+            <div>
+              <p>{data.shared.toLocaleString($locale)} Albums</p>
+            </div>
+          {/await}
+        </svelte:fragment>
+      </SideBarLink>
+    {/if}
+
+    <div class="text-xs transition-all duration-200 dark:text-immich-dark-fg">
+      <p class="hidden p-6 group-hover:sm:block md:block">LIBRARY</p>
+      <hr class="mx-4 mb-[31px] mt-8 block group-hover:sm:hidden md:hidden" />
+    </div>
+    <SideBarLink
       title="Favorites"
-      logo={isFavoritesSelected ? HeartMultiple : HeartMultipleOutline}
-      isSelected={isFavoritesSelected}
+      routeId="/(user)/favorites"
+      icon={isFavoritesSelected ? mdiHeart : mdiHeartOutline}
+      bind:isSelected={isFavoritesSelected}
     >
       <svelte:fragment slot="moreInformation">
         {#await getStats({ isFavorite: true })}
@@ -105,12 +123,10 @@
           </div>
         {/await}
       </svelte:fragment>
-    </SideBarButton>
-  </a>
-  <a data-sveltekit-preload-data="hover" href={AppRoute.ALBUMS} draggable="false">
-    <SideBarButton title="Albums" logo={ImageAlbum} flippedLogo={true} isSelected={$page.route.id === '/(user)/albums'}>
+    </SideBarLink>
+    <SideBarLink title="Albums" routeId="/(user)/albums" icon={mdiImageAlbum} flippedLogo>
       <svelte:fragment slot="moreInformation">
-        {#await getAlbumCount()}
+        {#await handleAlbumCount()}
           <LoadingSpinner />
         {:then data}
           <div>
@@ -118,10 +134,14 @@
           </div>
         {/await}
       </svelte:fragment>
-    </SideBarButton>
-  </a>
-  <a data-sveltekit-preload-data="hover" href={AppRoute.ARCHIVE} draggable="false">
-    <SideBarButton title="Archive" logo={ArchiveArrowDownOutline} isSelected={$page.route.id === '/(user)/archive'}>
+    </SideBarLink>
+
+    <SideBarLink
+      title="Archive"
+      routeId="/(user)/archive"
+      bind:isSelected={isArchiveSelected}
+      icon={isArchiveSelected ? mdiArchiveArrowDown : mdiArchiveArrowDownOutline}
+    >
       <svelte:fragment slot="moreInformation">
         {#await getStats({ isArchived: true })}
           <LoadingSpinner />
@@ -132,8 +152,28 @@
           </div>
         {/await}
       </svelte:fragment>
-    </SideBarButton>
-  </a>
+    </SideBarLink>
+
+    {#if $featureFlags.trash}
+      <SideBarLink
+        title="Trash"
+        routeId="/(user)/trash"
+        bind:isSelected={isTrashSelected}
+        icon={isTrashSelected ? mdiTrashCan : mdiTrashCanOutline}
+      >
+        <svelte:fragment slot="moreInformation">
+          {#await getStats({ isTrashed: true })}
+            <LoadingSpinner />
+          {:then data}
+            <div>
+              <p>{data.videos.toLocaleString($locale)} Videos</p>
+              <p>{data.images.toLocaleString($locale)} Photos</p>
+            </div>
+          {/await}
+        </svelte:fragment>
+      </SideBarLink>
+    {/if}
+  </nav>
 
   <!-- Status Box -->
   <div class="mb-6 mt-auto">

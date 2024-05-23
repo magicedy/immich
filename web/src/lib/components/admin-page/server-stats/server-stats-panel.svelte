@@ -1,10 +1,9 @@
 <script lang="ts">
+  import Icon from '$lib/components/elements/icon.svelte';
   import { locale } from '$lib/stores/preferences.store';
-  import type { ServerStatsResponseDto } from '@api';
-  import CameraIris from 'svelte-material-icons/CameraIris.svelte';
-  import Memory from 'svelte-material-icons/Memory.svelte';
-  import PlayCircle from 'svelte-material-icons/PlayCircle.svelte';
-  import { asByteUnitString, getBytesWithUnit } from '../../../utils/byte-units';
+  import { asByteUnitString, getBytesWithUnit } from '$lib/utils/byte-units';
+  import type { ServerStatsResponseDto } from '@immich/sdk';
+  import { mdiCameraIris, mdiChartPie, mdiPlayCircle } from '@mdi/js';
   import StatsCard from './stats-card.svelte';
 
   export let stats: ServerStatsResponseDto = {
@@ -22,7 +21,8 @@
     return '0'.repeat(zeroLength);
   };
 
-  $: [statsUsage, statsUsageUnit] = getBytesWithUnit(stats.usage, 0);
+  const TiB = 1024 ** 4;
+  $: [statsUsage, statsUsageUnit] = getBytesWithUnit(stats.usage, stats.usage > TiB ? 2 : 0);
 </script>
 
 <div class="flex flex-col gap-5">
@@ -30,15 +30,15 @@
     <p class="text-sm dark:text-immich-dark-fg">TOTAL USAGE</p>
 
     <div class="mt-5 hidden justify-between lg:flex">
-      <StatsCard logo={CameraIris} title="PHOTOS" value={stats.photos} />
-      <StatsCard logo={PlayCircle} title="VIDEOS" value={stats.videos} />
-      <StatsCard logo={Memory} title="STORAGE" value={statsUsage} unit={statsUsageUnit} />
+      <StatsCard icon={mdiCameraIris} title="PHOTOS" value={stats.photos} />
+      <StatsCard icon={mdiPlayCircle} title="VIDEOS" value={stats.videos} />
+      <StatsCard icon={mdiChartPie} title="STORAGE" value={statsUsage} unit={statsUsageUnit} />
     </div>
     <div class="mt-5 flex lg:hidden">
       <div class="flex flex-col justify-between rounded-3xl bg-immich-gray p-5 dark:bg-immich-dark-gray">
         <div class="flex flex-wrap gap-x-12">
           <div class="flex place-items-center gap-4 text-immich-primary dark:text-immich-dark-primary">
-            <CameraIris size="25" />
+            <Icon path={mdiCameraIris} size="25" />
             <p>PHOTOS</p>
           </div>
 
@@ -50,7 +50,7 @@
         </div>
         <div class="flex flex-wrap gap-x-12">
           <div class="flex place-items-center gap-4 text-immich-primary dark:text-immich-dark-primary">
-            <PlayCircle size="25" />
+            <Icon path={mdiPlayCircle} size="25" />
             <p>VIDEOS</p>
           </div>
 
@@ -62,7 +62,7 @@
         </div>
         <div class="flex flex-wrap gap-x-7">
           <div class="flex place-items-center gap-4 text-immich-primary dark:text-immich-dark-primary">
-            <Memory size="25" />
+            <Icon path={mdiChartPie} size="25" />
             <p>STORAGE</p>
           </div>
 
@@ -87,7 +87,7 @@
           <th class="w-1/4 text-center text-sm font-medium">User</th>
           <th class="w-1/4 text-center text-sm font-medium">Photos</th>
           <th class="w-1/4 text-center text-sm font-medium">Videos</th>
-          <th class="w-1/4 text-center text-sm font-medium">Size</th>
+          <th class="w-1/4 text-center text-sm font-medium">Usage</th>
         </tr>
       </thead>
       <tbody
@@ -97,10 +97,22 @@
           <tr
             class="flex h-[50px] w-full place-items-center text-center odd:bg-immich-gray even:bg-immich-bg odd:dark:bg-immich-dark-gray/75 even:dark:bg-immich-dark-gray/50"
           >
-            <td class="w-1/4 text-ellipsis px-2 text-sm">{user.userFirstName} {user.userLastName}</td>
+            <td class="w-1/4 text-ellipsis px-2 text-sm">{user.userName}</td>
             <td class="w-1/4 text-ellipsis px-2 text-sm">{user.photos.toLocaleString($locale)}</td>
             <td class="w-1/4 text-ellipsis px-2 text-sm">{user.videos.toLocaleString($locale)}</td>
-            <td class="w-1/4 text-ellipsis px-2 text-sm">{asByteUnitString(user.usage, $locale)}</td>
+            <td class="w-1/4 text-ellipsis px-2 text-sm">
+              {asByteUnitString(user.usage, $locale, 0)}
+              {#if user.quotaSizeInBytes}
+                / {asByteUnitString(user.quotaSizeInBytes, $locale, 0)}
+              {/if}
+              <span class="text-immich-primary dark:text-immich-dark-primary">
+                {#if user.quotaSizeInBytes}
+                  ({((user.usage / user.quotaSizeInBytes) * 100).toFixed(0)}%)
+                {:else}
+                  (Unlimited)
+                {/if}
+              </span>
+            </td>
           </tr>
         {/each}
       </tbody>

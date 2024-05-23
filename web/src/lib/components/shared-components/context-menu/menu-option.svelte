@@ -1,5 +1,9 @@
 <script>
+  import Icon from '$lib/components/elements/icon.svelte';
+
   export let text = '';
+  export let subtitle = '';
+  export let icon = '';
 </script>
 
 <button
@@ -8,8 +12,21 @@
   role="menuitem"
 >
   {#if text}
-    {text}
+    {#if icon}
+      <p class="flex gap-2">
+        <Icon path={icon} ariaHidden={true} size="18" />
+        {text}
+      </p>
+    {:else}
+      {text}
+    {/if}
   {:else}
     <slot />
   {/if}
+
+  <slot name="subtitle">
+    <p class="text-xs text-gray-500">
+      {subtitle}
+    </p>
+  </slot>
 </button>

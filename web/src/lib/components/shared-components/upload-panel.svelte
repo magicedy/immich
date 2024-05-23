@@ -2,14 +2,13 @@
   import { quartInOut } from 'svelte/easing';
   import { fade, scale } from 'svelte/transition';
   import { uploadAssetsStore } from '$lib/stores/upload';
-  import CloudUploadOutline from 'svelte-material-icons/CloudUploadOutline.svelte';
-  import WindowMinimize from 'svelte-material-icons/WindowMinimize.svelte';
-  import Cancel from 'svelte-material-icons/Cancel.svelte';
-  import Cog from 'svelte-material-icons/Cog.svelte';
+  import Icon from '$lib/components/elements/icon.svelte';
   import { notificationController, NotificationType } from './notification/notification';
   import UploadAssetPreview from './upload-asset-preview.svelte';
   import { uploadExecutionQueue } from '$lib/utils/file-uploader';
   import CircleIconButton from '../elements/buttons/circle-icon-button.svelte';
+  import { mdiCog, mdiWindowMinimize, mdiCancel, mdiCloudUploadOutline } from '@mdi/js';
+  import { s } from '$lib/utils';
 
   let showDetail = false;
   let showOptions = false;
@@ -36,24 +35,23 @@
     in:fade={{ duration: 250 }}
     out:fade={{ duration: 250 }}
     on:outroend={() => {
-      const errorInfo =
-        $errorCounter > 0
-          ? `Upload completed with ${$errorCounter} error${$errorCounter > 1 ? 's' : ''}`
-          : 'Upload success';
-      const type = $errorCounter > 0 ? NotificationType.Warning : NotificationType.Info;
-
-      notificationController.show({
-        message: `${errorInfo}, refresh the page to see new upload assets`,
-        type,
-      });
-
+      if ($errorCounter > 0) {
+        notificationController.show({
+          message: `Upload completed with ${$errorCounter} error${s($errorCounter)}, refresh the page to see new upload assets.`,
+          type: NotificationType.Warning,
+        });
+      } else if ($successCounter > 0) {
+        notificationController.show({
+          message: 'Upload success, refresh the page to see new upload assets.',
+          type: NotificationType.Info,
+        });
+      }
       if ($duplicateCounter > 0) {
         notificationController.show({
-          message: `Skipped ${$duplicateCounter} duplicate picture${$duplicateCounter > 1 ? 's' : ''}`,
+          message: `Skipped ${$duplicateCounter} duplicate asset${s($duplicateCounter)}`,
           type: NotificationType.Warning,
         });
       }
-
       uploadAssetsStore.resetStore();
     }}
     class="absolute bottom-6 right-6 z-[10000]"
@@ -78,14 +76,14 @@
             <div class="flex flex-row">
               <CircleIconButton
                 title="Toggle settings"
-                logo={Cog}
+                icon={mdiCog}
                 size="14"
                 padding="1"
                 on:click={() => (showOptions = !showOptions)}
               />
               <CircleIconButton
                 title="Minimize"
-                logo={WindowMinimize}
+                icon={mdiWindowMinimize}
                 size="14"
                 padding="1"
                 on:click={() => (showDetail = false)}
@@ -94,7 +92,7 @@
             {#if $hasError}
               <CircleIconButton
                 title="Dismiss all errors"
-                logo={Cancel}
+                icon={mdiCancel}
                 size="14"
                 padding="1"
                 on:click={() => uploadAssetsStore.dismissErrors()}
@@ -151,7 +149,7 @@
           class="flex h-16 w-16 place-content-center place-items-center rounded-full bg-gray-200 p-5 text-sm text-immich-primary shadow-lg dark:bg-gray-600 dark:text-immich-gray"
         >
           <div class="animate-pulse">
-            <CloudUploadOutline size="30" />
+            <Icon path={mdiCloudUploadOutline} size="30" />
           </div>
         </button>
       </div>

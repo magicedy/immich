@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -7,28 +8,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:timezone/data/latest.dart';
 import 'package:immich_mobile/constants/locales.dart';
-import 'package:immich_mobile/modules/backup/background_service/background.service.dart';
-import 'package:immich_mobile/modules/backup/models/backup_album.model.dart';
-import 'package:immich_mobile/modules/backup/models/duplicated_asset.model.dart';
+import 'package:immich_mobile/services/background.service.dart';
+import 'package:immich_mobile/entities/backup_album.entity.dart';
+import 'package:immich_mobile/entities/duplicated_asset.entity.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/routing/tab_navigation_observer.dart';
-import 'package:immich_mobile/shared/models/album.dart';
-import 'package:immich_mobile/shared/models/android_device_asset.dart';
-import 'package:immich_mobile/shared/models/asset.dart';
-import 'package:immich_mobile/shared/models/etag.dart';
-import 'package:immich_mobile/shared/models/exif_info.dart';
-import 'package:immich_mobile/shared/models/ios_device_asset.dart';
-import 'package:immich_mobile/shared/models/logger_message.model.dart';
-import 'package:immich_mobile/shared/models/store.dart';
-import 'package:immich_mobile/shared/models/user.dart';
-import 'package:immich_mobile/shared/providers/app_state.provider.dart';
-import 'package:immich_mobile/shared/providers/db.provider.dart';
-import 'package:immich_mobile/shared/providers/release_info.provider.dart';
-import 'package:immich_mobile/shared/services/immich_logger.service.dart';
-import 'package:immich_mobile/shared/services/local_notification.service.dart';
-import 'package:immich_mobile/shared/views/immich_loading_overlay.dart';
-import 'package:immich_mobile/shared/views/version_announcement_overlay.dart';
+import 'package:immich_mobile/utils/cache/widgets_binding.dart';
+import 'package:immich_mobile/entities/album.entity.dart';
+import 'package:immich_mobile/entities/android_device_asset.entity.dart';
+import 'package:immich_mobile/entities/asset.entity.dart';
+import 'package:immich_mobile/entities/etag.entity.dart';
+import 'package:immich_mobile/entities/exif_info.entity.dart';
+import 'package:immich_mobile/entities/ios_device_asset.entity.dart';
+import 'package:immich_mobile/entities/logger_message.entity.dart';
+import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/entities/user.entity.dart';
+import 'package:immich_mobile/providers/app_life_cycle.provider.dart';
+import 'package:immich_mobile/providers/db.provider.dart';
+import 'package:immich_mobile/services/immich_logger.service.dart';
+import 'package:immich_mobile/services/local_notification.service.dart';
 import 'package:immich_mobile/utils/http_ssl_cert_override.dart';
 import 'package:immich_mobile/utils/immich_app_theme.dart';
 import 'package:immich_mobile/utils/migration.dart';
@@ -37,13 +38,19 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  ImmichWidgetsBinding();
 
   final db = await loadDb();
   await initApp();
   await migrateDatabaseIfNeeded(db);
   HttpOverrides.global = HttpSSLCertOverride();
-  runApp(getMainWidget(db));
+
+  runApp(
+    ProviderScope(
+      overrides: [dbProvider.overrideWithValue(db)],
+      child: const MainWidget(),
+    ),
+  );
 }
 
 Future<void> initApp() async {
@@ -66,16 +73,18 @@ Future<void> initApp() async {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     log.severe(
-      'Catch all error: ${details.toString()} - ${details.exception} - ${details.library} - ${details.context} - ${details.stack}',
-      details,
+      'FlutterError - Catch all',
+      "${details.toString()}\nException: ${details.exception}\nLibrary: ${details.library}\nContext: ${details.context}",
       details.stack,
     );
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    log.severe('Catch all error: ${error.toString()} - $error', error, stack);
+    log.severe('PlatformDispatcher - Catch all', error, stack);
     return true;
   };
+
+  initializeTimeZones();
 }
 
 Future<Isar> loadDb() async {
@@ -101,19 +110,6 @@ Future<Isar> loadDb() async {
   return db;
 }
 
-Widget getMainWidget(Isar db) {
-  return EasyLocalization(
-    supportedLocales: locales,
-    path: translationsPath,
-    useFallbackTranslations: true,
-    fallbackLocale: locales.first,
-    child: ProviderScope(
-      overrides: [dbProvider.overrideWithValue(db)],
-      child: const ImmichApp(),
-    ),
-  );
-}
-
 class ImmichApp extends ConsumerStatefulWidget {
   const ImmichApp({super.key});
 
@@ -130,17 +126,14 @@ class ImmichAppState extends ConsumerState<ImmichApp>
         debugPrint("[APP STATE] resumed");
         ref.read(appStateProvider.notifier).handleAppResume();
         break;
-
       case AppLifecycleState.inactive:
         debugPrint("[APP STATE] inactive");
         ref.read(appStateProvider.notifier).handleAppInactivity();
         break;
-
       case AppLifecycleState.paused:
         debugPrint("[APP STATE] paused");
         ref.read(appStateProvider.notifier).handleAppPause();
         break;
-
       case AppLifecycleState.detached:
         debugPrint("[APP STATE] detached");
         ref.read(appStateProvider.notifier).handleAppDetached();
@@ -166,10 +159,9 @@ class ImmichAppState extends ConsumerState<ImmichApp>
       // Android 8 does not support transparent app bars
       final info = await DeviceInfoPlugin().androidInfo;
       if (info.version.sdkInt <= 26) {
-        overlayStyle =
-            MediaQuery.of(context).platformBrightness == Brightness.light
-                ? SystemUiOverlayStyle.light
-                : SystemUiOverlayStyle.dark;
+        overlayStyle = context.isDarkTheme
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light;
       }
     }
     SystemChrome.setSystemUIOverlayStyle(overlayStyle);
@@ -195,30 +187,39 @@ class ImmichAppState extends ConsumerState<ImmichApp>
   @override
   Widget build(BuildContext context) {
     var router = ref.watch(appRouterProvider);
-    ref.watch(releaseInfoProvider.notifier).checkGithubReleaseInfo();
 
     return MaterialApp(
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       debugShowCheckedModeBanner: false,
-      home: Stack(
-        children: [
-          MaterialApp.router(
-            title: 'Immich',
-            debugShowCheckedModeBanner: false,
-            themeMode: ref.watch(immichThemeProvider),
-            darkTheme: immichDarkTheme,
-            theme: immichLightTheme,
-            routeInformationParser: router.defaultRouteParser(),
-            routerDelegate: router.delegate(
-              navigatorObservers: () => [TabNavigationObserver(ref: ref)],
-            ),
-          ),
-          const ImmichLoadingOverlay(),
-          const VersionAnnouncementOverlay(),
-        ],
+      home: MaterialApp.router(
+        title: 'Immich',
+        debugShowCheckedModeBanner: false,
+        themeMode: ref.watch(immichThemeProvider),
+        darkTheme: immichDarkTheme,
+        theme: immichLightTheme,
+        routeInformationParser: router.defaultRouteParser(),
+        routerDelegate: router.delegate(
+          navigatorObservers: () => [TabNavigationObserver(ref: ref)],
+        ),
       ),
+    );
+  }
+}
+
+// ignore: prefer-single-widget-per-file
+class MainWidget extends StatelessWidget {
+  const MainWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return EasyLocalization(
+      supportedLocales: locales.values.toList(),
+      path: translationsPath,
+      useFallbackTranslations: true,
+      fallbackLocale: locales.values.first,
+      child: const ImmichApp(),
     );
   }
 }

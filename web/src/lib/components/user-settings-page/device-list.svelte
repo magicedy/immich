@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { api, AuthDeviceResponseDto } from '@api';
+  import { deleteAllSessions, deleteSession, getSessions, type SessionResponseDto } from '@immich/sdk';
   import { handleError } from '../../utils/handle-error';
   import Button from '../elements/buttons/button.svelte';
   import ConfirmDialogue from '../shared-components/confirm-dialogue.svelte';
   import { notificationController, NotificationType } from '../shared-components/notification/notification';
   import DeviceCard from './device-card.svelte';
 
-  export let devices: AuthDeviceResponseDto[];
-  let deleteDevice: AuthDeviceResponseDto | null = null;
+  export let devices: SessionResponseDto[];
+  let deleteDevice: SessionResponseDto | null = null;
   let deleteAll = false;
 
-  const refresh = () => api.authenticationApi.getAuthDevices().then(({ data }) => (devices = data));
+  const refresh = () => getSessions().then((_devices) => (devices = _devices));
 
   $: currentDevice = devices.find((device) => device.current);
   $: otherDevices = devices.filter((device) => !device.current);
@@ -21,7 +21,7 @@
     }
 
     try {
-      await api.authenticationApi.logoutAuthDevice({ id: deleteDevice.id });
+      await deleteSession({ id: deleteDevice.id });
       notificationController.show({ message: `Logged out device`, type: NotificationType.Info });
     } catch (error) {
       handleError(error, 'Unable to log out device');
@@ -33,7 +33,7 @@
 
   const handleDeleteAll = async () => {
     try {
-      await api.authenticationApi.logoutAuthDevices();
+      await deleteAllSessions();
       notificationController.show({
         message: `Logged out all devices`,
         type: NotificationType.Info,
@@ -49,17 +49,19 @@
 
 {#if deleteDevice}
   <ConfirmDialogue
+    id="log-out-device-modal"
     prompt="Are you sure you want to log out this device?"
-    on:confirm={() => handleDelete()}
-    on:cancel={() => (deleteDevice = null)}
+    onConfirm={() => handleDelete()}
+    onClose={() => (deleteDevice = null)}
   />
 {/if}
 
 {#if deleteAll}
   <ConfirmDialogue
+    id="log-out-all-modal"
     prompt="Are you sure you want to log out all devices?"
-    on:confirm={() => handleDeleteAll()}
-    on:cancel={() => (deleteAll = false)}
+    onConfirm={() => handleDeleteAll()}
+    onClose={() => (deleteAll = false)}
   />
 {/if}
 
@@ -73,9 +75,9 @@
   {#if otherDevices.length > 0}
     <div class="mb-6">
       <h3 class="mb-2 text-xs font-medium text-immich-primary dark:text-immich-dark-primary">OTHER DEVICES</h3>
-      {#each otherDevices as device, i}
+      {#each otherDevices as device, index}
         <DeviceCard {device} on:delete={() => (deleteDevice = device)} />
-        {#if i !== otherDevices.length - 1}
+        {#if index !== otherDevices.length - 1}
           <hr class="my-3" />
         {/if}
       {/each}

@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -29,10 +29,10 @@ class SearchAlbumResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is SearchAlbumResponseDto &&
-     other.count == count &&
-     other.facets == facets &&
-     other.items == items &&
-     other.total == total;
+    other.count == count &&
+    _deepEquality.equals(other.facets, facets) &&
+    _deepEquality.equals(other.items, items) &&
+    other.total == total;
 
   @override
   int get hashCode =>

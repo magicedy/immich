@@ -1,40 +1,29 @@
 <script lang="ts">
-  import { api, AssetResponseDto, SharedLinkResponseDto, SharedLinkType, ThumbnailFormat } from '@api';
-  import LoadingSpinner from '../shared-components/loading-spinner.svelte';
-  import OpenInNew from 'svelte-material-icons/OpenInNew.svelte';
-  import Delete from 'svelte-material-icons/TrashCanOutline.svelte';
-  import ContentCopy from 'svelte-material-icons/ContentCopy.svelte';
-  import CircleEditOutline from 'svelte-material-icons/CircleEditOutline.svelte';
+  import Icon from '$lib/components/elements/icon.svelte';
+  import { AppRoute } from '$lib/constants';
+  import { SharedLinkType, type SharedLinkResponseDto } from '@immich/sdk';
+  import { mdiCircleEditOutline, mdiContentCopy, mdiDelete, mdiOpenInNew } from '@mdi/js';
   import * as luxon from 'luxon';
-  import CircleIconButton from '../elements/buttons/circle-icon-button.svelte';
   import { createEventDispatcher } from 'svelte';
-  import { goto } from '$app/navigation';
+  import CircleIconButton from '../elements/buttons/circle-icon-button.svelte';
+  import { locale } from '$lib/stores/preferences.store';
+  import AlbumCover from '$lib/components/album-page/album-cover.svelte';
 
   export let link: SharedLinkResponseDto;
 
   let expirationCountdown: luxon.DurationObjectUnits;
-  const dispatch = createEventDispatcher();
-
-  const getAssetInfo = async (): Promise<AssetResponseDto> => {
-    let assetId = '';
-
-    if (link.album?.albumThumbnailAssetId) {
-      assetId = link.album.albumThumbnailAssetId;
-    } else if (link.assets.length > 0) {
-      assetId = link.assets[0].id;
-    }
-
-    const { data } = await api.assetApi.getAssetById({ id: assetId });
-
-    return data;
-  };
+  const dispatch = createEventDispatcher<{
+    delete: void;
+    copy: void;
+    edit: void;
+  }>();
 
   const getCountDownExpirationDate = () => {
     if (!link.expiresAt) {
       return;
     }
 
-    const expiresAtDate = luxon.DateTime.fromISO(new Date(link.expiresAt).toISOString());
+    const expiresAtDate = luxon.DateTime.fromISO(new Date(link.expiresAt).toISOString(), { locale: $locale });
     const now = luxon.DateTime.now();
 
     expirationCountdown = expiresAtDate.diff(now, ['days', 'hours', 'minutes', 'seconds']).toObject();
@@ -51,7 +40,7 @@
   };
 
   const isExpired = (expiresAt: string) => {
-    const now = new Date().getTime();
+    const now = Date.now();
     const expiration = new Date(expiresAt).getTime();
 
     return now > expiration;
@@ -62,18 +51,7 @@
   class="flex w-full gap-4 border-b border-gray-200 py-4 transition-all hover:border-immich-primary dark:border-gray-600 dark:text-immich-gray dark:hover:border-immich-dark-primary"
 >
   <div>
-    {#await getAssetInfo()}
-      <LoadingSpinner />
-    {:then asset}
-      <img
-        id={asset.id}
-        src={api.getAssetThumbnailUrl(asset.id, ThumbnailFormat.Webp)}
-        alt={asset.id}
-        class="h-[100px] w-[100px] rounded-lg object-cover"
-        loading="lazy"
-        draggable="false"
-      />
-    {/await}
+    <AlbumCover album={link?.album} css="h-[100px] w-[100px] transition-all duration-300 hover:shadow-lg" />
   </div>
 
   <div class="flex flex-col justify-between">
@@ -103,15 +81,9 @@
           {/if}
 
           {#if !link.expiresAt || !isExpired(link.expiresAt)}
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div
-              class="hover:cursor-pointer"
-              title="Go to share page"
-              on:click={() => goto(`/share/${link.key}`)}
-              on:keydown={() => goto(`/share/${link.key}`)}
-            >
-              <OpenInNew />
-            </div>
+            <a href="{AppRoute.SHARE}/{link.key}" title="Go to share page">
+              <Icon path={mdiOpenInNew} />
+            </a>
           {/if}
         </div>
 
@@ -136,11 +108,19 @@
         </div>
       {/if}
 
-      {#if link.showExif}
+      {#if link.showMetadata}
         <div
           class="flex w-[60px] place-content-center place-items-center rounded-full bg-immich-primary px-2 py-1 text-xs text-white dark:bg-immich-dark-primary dark:text-immich-dark-gray"
         >
           EXIF
+        </div>
+      {/if}
+
+      {#if link.password}
+        <div
+          class="flex w-[100px] place-content-center place-items-center rounded-full bg-immich-primary px-2 py-1 text-xs text-white dark:bg-immich-dark-primary dark:text-immich-dark-gray"
+        >
+          Password
         </div>
       {/if}
     </div>
@@ -148,9 +128,9 @@
 
   <div class="flex flex-auto flex-col place-content-center place-items-end text-right">
     <div class="flex">
-      <CircleIconButton logo={Delete} on:click={() => dispatch('delete')} />
-      <CircleIconButton logo={CircleEditOutline} on:click={() => dispatch('edit')} />
-      <CircleIconButton logo={ContentCopy} on:click={() => dispatch('copy')} />
+      <CircleIconButton title="Delete link" icon={mdiDelete} on:click={() => dispatch('delete')} />
+      <CircleIconButton title="Edit link" icon={mdiCircleEditOutline} on:click={() => dispatch('edit')} />
+      <CircleIconButton title="Copy link" icon={mdiContentCopy} on:click={() => dispatch('copy')} />
     </div>
   </div>
 </div>

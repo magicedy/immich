@@ -1,6 +1,7 @@
-import 'package:immich_mobile/shared/models/album.dart';
-import 'package:immich_mobile/shared/models/asset.dart';
-import 'package:immich_mobile/shared/models/store.dart';
+import 'package:immich_mobile/entities/album.entity.dart';
+import 'package:immich_mobile/entities/asset.entity.dart';
+import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:isar/isar.dart';
 import 'package:openapi/api.dart';
 
 String getThumbnailUrl(
@@ -35,8 +36,10 @@ String getAlbumThumbnailUrl(
   if (album.thumbnail.value?.remoteId == null) {
     return '';
   }
-  return getThumbnailUrlForRemoteId(album.thumbnail.value!.remoteId!,
-      type: type,);
+  return getThumbnailUrlForRemoteId(
+    album.thumbnail.value!.remoteId!,
+    type: type,
+  );
 }
 
 String getAlbumThumbNailCacheKey(
@@ -53,11 +56,17 @@ String getAlbumThumbNailCacheKey(
 }
 
 String getImageUrl(final Asset asset) {
-  return '${Store.get(StoreKey.serverEndpoint)}/asset/file/${asset.remoteId}?isThumb=false';
+  return getImageUrlFromId(asset.remoteId!);
+}
+
+String getImageUrlFromId(final String id) {
+  return '${Store.get(StoreKey.serverEndpoint)}/asset/file/$id?isThumb=false';
 }
 
 String getImageCacheKey(final Asset asset) {
-  return '${asset.id}_fullStage';
+  // Assets from response DTOs do not have an isar id, querying which would give us the default autoIncrement id
+  final isFromDto = asset.id == Isar.autoIncrement;
+  return '${isFromDto ? asset.remoteId : asset.id}_fullStage';
 }
 
 String getThumbnailUrlForRemoteId(
@@ -68,5 +77,5 @@ String getThumbnailUrlForRemoteId(
 }
 
 String getFaceThumbnailUrl(final String personId) {
-  return '${Store.get(StoreKey.serverEndpoint)}/person/$personId/thumbnail';
+  return '${Store.get(StoreKey.serverEndpoint)}/people/$personId/thumbnail';
 }

@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -23,8 +23,8 @@ class CheckExistingAssetsDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is CheckExistingAssetsDto &&
-     other.deviceAssetIds == deviceAssetIds &&
-     other.deviceId == deviceId;
+    _deepEquality.equals(other.deviceAssetIds, deviceAssetIds) &&
+    other.deviceId == deviceId;
 
   @override
   int get hashCode =>
@@ -50,8 +50,8 @@ class CheckExistingAssetsDto {
       final json = value.cast<String, dynamic>();
 
       return CheckExistingAssetsDto(
-        deviceAssetIds: json[r'deviceAssetIds'] is List
-            ? (json[r'deviceAssetIds'] as List).cast<String>()
+        deviceAssetIds: json[r'deviceAssetIds'] is Iterable
+            ? (json[r'deviceAssetIds'] as Iterable).cast<String>().toList(growable: false)
             : const [],
         deviceId: mapValueOfType<String>(json, r'deviceId')!,
       );

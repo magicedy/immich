@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -32,11 +32,11 @@ class PersonResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is PersonResponseDto &&
-     other.birthDate == birthDate &&
-     other.id == id &&
-     other.isHidden == isHidden &&
-     other.name == name &&
-     other.thumbnailPath == thumbnailPath;
+    other.birthDate == birthDate &&
+    other.id == id &&
+    other.isHidden == isHidden &&
+    other.name == name &&
+    other.thumbnailPath == thumbnailPath;
 
   @override
   int get hashCode =>
@@ -72,7 +72,7 @@ class PersonResponseDto {
       final json = value.cast<String, dynamic>();
 
       return PersonResponseDto(
-        birthDate: mapDateTime(json, r'birthDate', ''),
+        birthDate: mapDateTime(json, r'birthDate', r''),
         id: mapValueOfType<String>(json, r'id')!,
         isHidden: mapValueOfType<bool>(json, r'isHidden')!,
         name: mapValueOfType<String>(json, r'name')!,

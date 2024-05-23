@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -23,20 +23,18 @@ class ModelType {
 
   String toJson() => value;
 
-  static const imageClassification = ModelType._(r'image-classification');
   static const facialRecognition = ModelType._(r'facial-recognition');
   static const clip = ModelType._(r'clip');
 
   /// List of all possible values in this [enum][ModelType].
   static const values = <ModelType>[
-    imageClassification,
     facialRecognition,
     clip,
   ];
 
   static ModelType? fromJson(dynamic value) => ModelTypeTypeTransformer().decode(value);
 
-  static List<ModelType>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<ModelType> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <ModelType>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -70,7 +68,6 @@ class ModelTypeTypeTransformer {
   ModelType? decode(dynamic data, {bool allowNull = true}) {
     if (data != null) {
       switch (data) {
-        case r'image-classification': return ModelType.imageClassification;
         case r'facial-recognition': return ModelType.facialRecognition;
         case r'clip': return ModelType.clip;
         default:

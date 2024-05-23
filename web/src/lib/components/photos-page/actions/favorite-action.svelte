@@ -5,42 +5,42 @@
     NotificationType,
     notificationController,
   } from '$lib/components/shared-components/notification/notification';
+  import type { OnFavorite } from '$lib/utils/actions';
   import { handleError } from '$lib/utils/handle-error';
-  import { api } from '@api';
-  import HeartMinusOutline from 'svelte-material-icons/HeartMinusOutline.svelte';
-  import HeartOutline from 'svelte-material-icons/HeartOutline.svelte';
-  import TimerSand from 'svelte-material-icons/TimerSand.svelte';
-  import { OnFavorite, getAssetControlContext } from '../asset-select-control-bar.svelte';
+  import { updateAssets } from '@immich/sdk';
+  import { mdiHeartMinusOutline, mdiHeartOutline, mdiTimerSand } from '@mdi/js';
+  import { getAssetControlContext } from '../asset-select-control-bar.svelte';
 
-  export let onFavorite: OnFavorite | undefined = undefined;
+  export let onFavorite: OnFavorite;
 
   export let menuItem = false;
   export let removeFavorite: boolean;
 
-  $: text = removeFavorite ? 'Remove from Favorites' : 'Favorite';
-  $: logo = removeFavorite ? HeartMinusOutline : HeartOutline;
+  $: text = removeFavorite ? 'Remove from favorites' : 'Favorite';
+  $: icon = removeFavorite ? mdiHeartMinusOutline : mdiHeartOutline;
 
   let loading = false;
 
-  const { getAssets, clearSelect } = getAssetControlContext();
+  const { clearSelect, getOwnedAssets } = getAssetControlContext();
 
   const handleFavorite = async () => {
     const isFavorite = !removeFavorite;
     loading = true;
 
     try {
-      const assets = Array.from(getAssets()).filter((asset) => asset.isFavorite !== isFavorite);
+      const assets = [...getOwnedAssets()].filter((asset) => asset.isFavorite !== isFavorite);
+
       const ids = assets.map(({ id }) => id);
 
       if (ids.length > 0) {
-        await api.assetApi.updateAssets({ assetBulkUpdateDto: { ids, isFavorite } });
+        await updateAssets({ assetBulkUpdateDto: { ids, isFavorite } });
       }
 
       for (const asset of assets) {
         asset.isFavorite = isFavorite;
       }
 
-      onFavorite?.(ids, isFavorite);
+      onFavorite(ids, isFavorite);
 
       notificationController.show({
         message: isFavorite ? `Added ${ids.length} to favorites` : `Removed ${ids.length} from favorites`,
@@ -57,13 +57,13 @@
 </script>
 
 {#if menuItem}
-  <MenuOption {text} on:click={handleFavorite} />
+  <MenuOption {text} {icon} on:click={handleFavorite} />
 {/if}
 
 {#if !menuItem}
   {#if loading}
-    <CircleIconButton title="Loading" logo={TimerSand} />
+    <CircleIconButton title="Loading" icon={mdiTimerSand} />
   {:else}
-    <CircleIconButton title={text} {logo} on:click={handleFavorite} />
+    <CircleIconButton title={text} {icon} on:click={handleFavorite} />
   {/if}
 {/if}

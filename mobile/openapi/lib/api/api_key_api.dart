@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -16,13 +16,13 @@ class APIKeyApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'POST /api-key' operation and returns the [Response].
+  /// Performs an HTTP 'POST /api-keys' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [APIKeyCreateDto] aPIKeyCreateDto (required):
-  Future<Response> createKeyWithHttpInfo(APIKeyCreateDto aPIKeyCreateDto,) async {
+  Future<Response> createApiKeyWithHttpInfo(APIKeyCreateDto aPIKeyCreateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/api-key';
+    final path = r'/api-keys';
 
     // ignore: prefer_final_locals
     Object? postBody = aPIKeyCreateDto;
@@ -48,8 +48,8 @@ class APIKeyApi {
   /// Parameters:
   ///
   /// * [APIKeyCreateDto] aPIKeyCreateDto (required):
-  Future<APIKeyCreateResponseDto?> createKey(APIKeyCreateDto aPIKeyCreateDto,) async {
-    final response = await createKeyWithHttpInfo(aPIKeyCreateDto,);
+  Future<APIKeyCreateResponseDto?> createApiKey(APIKeyCreateDto aPIKeyCreateDto,) async {
+    final response = await createApiKeyWithHttpInfo(aPIKeyCreateDto,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -63,13 +63,13 @@ class APIKeyApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /api-key/{id}' operation and returns the [Response].
+  /// Performs an HTTP 'DELETE /api-keys/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<Response> deleteKeyWithHttpInfo(String id,) async {
+  Future<Response> deleteApiKeyWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/api-key/{id}'
+    final path = r'/api-keys/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -96,20 +96,20 @@ class APIKeyApi {
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<void> deleteKey(String id,) async {
-    final response = await deleteKeyWithHttpInfo(id,);
+  Future<void> deleteApiKey(String id,) async {
+    final response = await deleteApiKeyWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
   }
 
-  /// Performs an HTTP 'GET /api-key/{id}' operation and returns the [Response].
+  /// Performs an HTTP 'GET /api-keys/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<Response> getKeyWithHttpInfo(String id,) async {
+  Future<Response> getApiKeyWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/api-key/{id}'
+    final path = r'/api-keys/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -136,8 +136,8 @@ class APIKeyApi {
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<APIKeyResponseDto?> getKey(String id,) async {
-    final response = await getKeyWithHttpInfo(id,);
+  Future<APIKeyResponseDto?> getApiKey(String id,) async {
+    final response = await getApiKeyWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -151,10 +151,10 @@ class APIKeyApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /api-key' operation and returns the [Response].
-  Future<Response> getKeysWithHttpInfo() async {
+  /// Performs an HTTP 'GET /api-keys' operation and returns the [Response].
+  Future<Response> getApiKeysWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/api-key';
+    final path = r'/api-keys';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -177,8 +177,8 @@ class APIKeyApi {
     );
   }
 
-  Future<List<APIKeyResponseDto>?> getKeys() async {
-    final response = await getKeysWithHttpInfo();
+  Future<List<APIKeyResponseDto>?> getApiKeys() async {
+    final response = await getApiKeysWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -189,21 +189,21 @@ class APIKeyApi {
       final responseBody = await _decodeBodyBytes(response);
       return (await apiClient.deserializeAsync(responseBody, 'List<APIKeyResponseDto>') as List)
         .cast<APIKeyResponseDto>()
-        .toList();
+        .toList(growable: false);
 
     }
     return null;
   }
 
-  /// Performs an HTTP 'PUT /api-key/{id}' operation and returns the [Response].
+  /// Performs an HTTP 'PUT /api-keys/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
   ///
   /// * [APIKeyUpdateDto] aPIKeyUpdateDto (required):
-  Future<Response> updateKeyWithHttpInfo(String id, APIKeyUpdateDto aPIKeyUpdateDto,) async {
+  Future<Response> updateApiKeyWithHttpInfo(String id, APIKeyUpdateDto aPIKeyUpdateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/api-key/{id}'
+    final path = r'/api-keys/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -232,8 +232,8 @@ class APIKeyApi {
   /// * [String] id (required):
   ///
   /// * [APIKeyUpdateDto] aPIKeyUpdateDto (required):
-  Future<APIKeyResponseDto?> updateKey(String id, APIKeyUpdateDto aPIKeyUpdateDto,) async {
-    final response = await updateKeyWithHttpInfo(id, aPIKeyUpdateDto,);
+  Future<APIKeyResponseDto?> updateApiKey(String id, APIKeyUpdateDto aPIKeyUpdateDto,) async {
+    final response = await updateApiKeyWithHttpInfo(id, aPIKeyUpdateDto,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

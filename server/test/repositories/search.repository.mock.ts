@@ -1,21 +1,16 @@
-import { ISearchRepository } from '@app/domain';
+import { ISearchRepository } from 'src/interfaces/search.interface';
+import { Mocked, vitest } from 'vitest';
 
-export const newSearchRepositoryMock = (): jest.Mocked<ISearchRepository> => {
+export const newSearchRepositoryMock = (): Mocked<ISearchRepository> => {
   return {
-    setup: jest.fn(),
-    checkMigrationStatus: jest.fn(),
-    importAssets: jest.fn(),
-    importAlbums: jest.fn(),
-    importFaces: jest.fn(),
-    deleteAlbums: jest.fn(),
-    deleteAssets: jest.fn(),
-    deleteFaces: jest.fn(),
-    deleteAllFaces: jest.fn(),
-    updateCLIPField: jest.fn(),
-    searchAssets: jest.fn(),
-    searchAlbums: jest.fn(),
-    vectorSearch: jest.fn(),
-    explore: jest.fn(),
-    searchFaces: jest.fn(),
+    init: vitest.fn(),
+    searchMetadata: vitest.fn(),
+    searchSmart: vitest.fn(),
+    searchDuplicates: vitest.fn(),
+    searchFaces: vitest.fn(),
+    upsert: vitest.fn(),
+    searchPlaces: vitest.fn(),
+    getAssetsByCity: vitest.fn(),
+    deleteAllSearchEmbeddings: vitest.fn(),
   };
 };

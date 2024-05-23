@@ -1,67 +1,113 @@
-<script lang="ts">
-  import Check from 'svelte-material-icons/Check.svelte';
+<script lang="ts" context="module">
+  // Necessary for eslint
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  type T = any;
+
+  export type RenderedOption = {
+    title: string;
+    icon?: string;
+    disabled?: boolean;
+  };
+</script>
+
+<script lang="ts" generics="T">
+  import Icon from './icon.svelte';
+
+  import { mdiCheck } from '@mdi/js';
+
+  import { isEqual } from 'lodash-es';
   import LinkButton from './buttons/link-button.svelte';
   import { clickOutside } from '$lib/utils/click-outside';
   import { fly } from 'svelte/transition';
-  import type Icon from 'svelte-material-icons/DotsVertical.svelte';
+  import { createEventDispatcher } from 'svelte';
 
-  interface DropdownOption {
-    value: string;
-    icon?: Icon;
-  }
+  let className = '';
+  export { className as class };
 
-  export let options: DropdownOption[] | string[] = [];
-  export let value = options[0];
-  export let icons: (typeof Icon)[] | undefined = undefined;
+  const dispatch = createEventDispatcher<{
+    select: T;
+    'click-outside': void;
+  }>();
 
-  let showMenu = false;
+  export let options: T[];
+  export let selectedOption = options[0];
+  export let showMenu = false;
+  export let controlable = false;
+  export let hideTextOnSmallScreen = true;
+  export let title: string | undefined = undefined;
+
+  export let render: (item: T) => string | RenderedOption = String;
 
   const handleClickOutside = () => {
+    if (!controlable) {
+      showMenu = false;
+    }
+
+    dispatch('click-outside');
+  };
+
+  const handleSelectOption = (option: T) => {
+    dispatch('select', option);
+    selectedOption = option;
+
     showMenu = false;
   };
 
-  const handleSelectOption = (index: number) => {
-    value = options[index];
-    showMenu = false;
+  const renderOption = (option: T): RenderedOption => {
+    const renderedOption = render(option);
+    switch (typeof renderedOption) {
+      case 'string': {
+        return { title: renderedOption };
+      }
+      default: {
+        return {
+          title: renderedOption.title,
+          icon: renderedOption.icon,
+          disabled: renderedOption.disabled,
+        };
+      }
+    }
   };
 
-  $: index = options.findIndex((option) => option === value);
-  $: icon = icons?.[index];
+  $: renderedSelectedOption = renderOption(selectedOption);
 </script>
 
-<div id="dropdown-button" use:clickOutside on:outclick={handleClickOutside}>
+<div use:clickOutside on:outclick={handleClickOutside} on:escape={handleClickOutside}>
   <!-- BUTTON TITLE -->
-  <LinkButton on:click={() => (showMenu = true)}>
+  <LinkButton on:click={() => (showMenu = true)} fullwidth {title}>
     <div class="flex place-items-center gap-2 text-sm">
-      {#if icon}
-        <svelte:component this={icon} size="18" />
+      {#if renderedSelectedOption?.icon}
+        <Icon path={renderedSelectedOption.icon} size="18" />
       {/if}
-      {value}
+      <p class={hideTextOnSmallScreen ? 'hidden sm:block' : ''}>{renderedSelectedOption.title}</p>
     </div>
   </LinkButton>
 
   <!-- DROP DOWN MENU -->
   {#if showMenu}
     <div
-      transition:fly={{ y: -30, x: 30, duration: 200 }}
-      class="text-md absolute right-0 top-5 z-50 flex min-w-[250px] flex-col rounded-2xl bg-gray-100 py-4 text-black shadow-lg dark:bg-gray-700 dark:text-white"
+      transition:fly={{ y: -30, duration: 250 }}
+      class="text-sm font-medium fixed z-50 flex min-w-[250px] max-h-[70vh] overflow-y-auto immich-scrollbar flex-col rounded-2xl bg-gray-100 py-2 text-black shadow-lg dark:bg-gray-700 dark:text-white {className}"
     >
-      {#each options as option, index (option)}
+      {#each options as option (option)}
+        {@const renderedOption = renderOption(option)}
+        {@const buttonStyle = renderedOption.disabled ? '' : 'transition-all hover:bg-gray-300 dark:hover:bg-gray-800'}
         <button
-          class="grid grid-cols-[20px,1fr] place-items-center gap-2 p-4 transition-all hover:bg-gray-300 dark:hover:bg-gray-800"
-          on:click={() => handleSelectOption(index)}
+          class="grid grid-cols-[36px,1fr] place-items-center p-2 disabled:opacity-40 {buttonStyle}"
+          disabled={renderedOption.disabled}
+          on:click={() => !renderedOption.disabled && handleSelectOption(option)}
         >
-          {#if value == option}
-            <div class="font-medium text-immich-primary dark:text-immich-dark-primary">
-              <Check size="18" />
+          {#if isEqual(selectedOption, option)}
+            <div class="text-immich-primary dark:text-immich-dark-primary">
+              <Icon path={mdiCheck} size="18" />
             </div>
-            <p class="justify-self-start font-medium text-immich-primary dark:text-immich-dark-primary">
-              {option}
+            <p class="justify-self-start text-immich-primary dark:text-immich-dark-primary">
+              {renderedOption.title}
             </p>
           {:else}
             <div />
             <p class="justify-self-start">
-              {option}
+              {renderedOption.title}
             </p>
           {/if}
         </button>

@@ -1,21 +1,32 @@
 <script lang="ts">
-  import { ProjectionType } from '$lib/constants';
   import IntersectionObserver from '$lib/components/asset-viewer/intersection-observer.svelte';
-  import { timeToSeconds } from '$lib/utils/time-to-seconds';
-  import { api, AssetResponseDto, AssetTypeEnum, ThumbnailFormat } from '@api';
+  import Icon from '$lib/components/elements/icon.svelte';
+  import { ProjectionType } from '$lib/constants';
+  import { getAssetFileUrl, getAssetThumbnailUrl, isSharedLink } from '$lib/utils';
+  import { getAltText } from '$lib/utils/thumbnail-util';
+  import { timeToSeconds } from '$lib/utils/date-time';
+  import { AssetTypeEnum, ThumbnailFormat, type AssetResponseDto } from '@immich/sdk';
+  import { playVideoThumbnailOnHover } from '$lib/stores/preferences.store';
+  import {
+    mdiArchiveArrowDownOutline,
+    mdiCameraBurst,
+    mdiCheckCircle,
+    mdiHeart,
+    mdiImageBrokenVariant,
+    mdiMotionPauseOutline,
+    mdiMotionPlayOutline,
+    mdiRotate360,
+  } from '@mdi/js';
   import { createEventDispatcher } from 'svelte';
-  import ArchiveArrowDownOutline from 'svelte-material-icons/ArchiveArrowDownOutline.svelte';
-  import CheckCircle from 'svelte-material-icons/CheckCircle.svelte';
-  import Heart from 'svelte-material-icons/Heart.svelte';
-  import ImageBrokenVariant from 'svelte-material-icons/ImageBrokenVariant.svelte';
-  import MotionPauseOutline from 'svelte-material-icons/MotionPauseOutline.svelte';
-  import MotionPlayOutline from 'svelte-material-icons/MotionPlayOutline.svelte';
   import { fade } from 'svelte/transition';
   import ImageThumbnail from './image-thumbnail.svelte';
   import VideoThumbnail from './video-thumbnail.svelte';
-  import Rotate360Icon from 'svelte-material-icons/Rotate360.svelte';
+  import { shortcut } from '$lib/utils/shortcut';
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    select: { asset: AssetResponseDto };
+    'mouse-event': { isMouseOver: boolean; selectedGroupIndex: number };
+  }>();
 
   export let asset: AssetResponseDto;
   export let groupIndex = 0;
@@ -28,8 +39,14 @@
   export let disabled = false;
   export let readonly = false;
   export let showArchiveIcon = false;
+  export let showStackedIcon = true;
+  export let onClick: ((asset: AssetResponseDto) => void) | undefined = undefined;
+
+  let className = '';
+  export { className as class };
 
   let mouseOver = false;
+  $: clickable = !disabled && onClick;
 
   $: dispatch('mouse-event', { isMouseOver: mouseOver, selectedGroupIndex: groupIndex });
 
@@ -46,14 +63,8 @@
   })();
 
   const thumbnailClickedHandler = () => {
-    if (!disabled) {
-      dispatch('click', { asset });
-    }
-  };
-
-  const thumbnailKeyDownHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      thumbnailClickedHandler();
+    if (clickable) {
+      onClick?.(asset);
     }
   };
 
@@ -63,25 +74,35 @@
       dispatch('select', { asset });
     }
   };
+
+  const onMouseEnter = () => {
+    mouseOver = true;
+  };
+
+  const onMouseLeave = () => {
+    mouseOver = false;
+  };
 </script>
 
-<IntersectionObserver once={false} let:intersecting>
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
+<IntersectionObserver once={false} on:intersected let:intersecting>
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <div
     style:width="{width}px"
     style:height="{height}px"
-    class="group relative overflow-hidden {disabled
+    class="group focus-visible:outline-none relative overflow-hidden {disabled
       ? 'bg-gray-300'
       : 'bg-immich-primary/20 dark:bg-immich-dark-primary/20'}"
     class:cursor-not-allowed={disabled}
-    class:hover:cursor-pointer={!disabled}
-    on:mouseenter={() => (mouseOver = true)}
-    on:mouseleave={() => (mouseOver = false)}
+    class:hover:cursor-pointer={clickable}
+    on:mouseenter={onMouseEnter}
+    on:mouseleave={onMouseLeave}
+    role={clickable ? 'button' : undefined}
+    tabindex={clickable ? 0 : undefined}
     on:click={thumbnailClickedHandler}
-    on:keydown={thumbnailKeyDownHandler}
+    use:shortcut={{ shortcut: { key: 'Enter' }, onShortcut: thumbnailClickedHandler }}
   >
     {#if intersecting}
-      <div class="absolute z-20 h-full w-full">
+      <div class="absolute z-20 h-full w-full {className}">
         <!-- Select asset button  -->
         {#if !readonly && (mouseOver || selected || selectionCandidate)}
           <button
@@ -93,13 +114,13 @@
             {disabled}
           >
             {#if disabled}
-              <CheckCircle size="24" class="text-zinc-800" />
+              <Icon path={mdiCheckCircle} size="24" class="text-zinc-800" />
             {:else if selected}
               <div class="rounded-full bg-[#D9DCEF] dark:bg-[#232932]">
-                <CheckCircle size="24" class="text-immich-primary" />
+                <Icon path={mdiCheckCircle} size="24" class="text-immich-primary" />
               </div>
             {:else}
-              <CheckCircle size="24" class="text-white/80 hover:text-white" />
+              <Icon path={mdiCheckCircle} size="24" class="text-white/80 hover:text-white" />
             {/if}
           </button>
         {/if}
@@ -116,31 +137,51 @@
           class:rounded-xl={selected}
         />
 
+        <!-- Outline on focus -->
+        <div
+          class="absolute size-full group-focus-visible:outline outline-4 -outline-offset-4 outline-immich-primary"
+        />
+
         <!-- Favorite asset star -->
-        {#if !api.isSharedLink && asset.isFavorite}
+        {#if !isSharedLink() && asset.isFavorite}
           <div class="absolute bottom-2 left-2 z-10">
-            <Heart size="24" class="text-white" />
+            <Icon path={mdiHeart} size="24" class="text-white" />
           </div>
         {/if}
 
-        {#if !api.isSharedLink && showArchiveIcon && asset.isArchived}
+        {#if !isSharedLink() && showArchiveIcon && asset.isArchived}
           <div class="absolute {asset.isFavorite ? 'bottom-10' : 'bottom-2'} left-2 z-10">
-            <ArchiveArrowDownOutline size="24" class="text-white" />
+            <Icon path={mdiArchiveArrowDownOutline} size="24" class="text-white" />
           </div>
         {/if}
 
         {#if asset.type === AssetTypeEnum.Image && asset.exifInfo?.projectionType === ProjectionType.EQUIRECTANGULAR}
           <div class="absolute right-0 top-0 z-20 flex place-items-center gap-1 text-xs font-medium text-white">
             <span class="pr-2 pt-2">
-              <Rotate360Icon size="24" />
+              <Icon path={mdiRotate360} size="24" />
+            </span>
+          </div>
+        {/if}
+
+        <!-- Stacked asset -->
+
+        {#if asset.stackCount && showStackedIcon}
+          <div
+            class="absolute {asset.type == AssetTypeEnum.Image && asset.livePhotoVideoId == undefined
+              ? 'top-0 right-0'
+              : 'top-7 right-1'} z-20 flex place-items-center gap-1 text-xs font-medium text-white"
+          >
+            <span class="pr-2 pt-2 flex place-items-center gap-1">
+              <p>{asset.stackCount}</p>
+              <Icon path={mdiCameraBurst} size="24" />
             </span>
           </div>
         {/if}
 
         {#if asset.resized}
           <ImageThumbnail
-            url={api.getAssetThumbnailUrl(asset.id, format)}
-            altText={asset.originalFileName}
+            url={getAssetThumbnailUrl(asset.id, format)}
+            altText={getAltText(asset)}
             widthStyle="{width}px"
             heightStyle="{height}px"
             thumbhash={asset.thumbhash}
@@ -148,17 +189,18 @@
           />
         {:else}
           <div class="flex h-full w-full items-center justify-center p-4">
-            <ImageBrokenVariant size="48" />
+            <Icon path={mdiImageBrokenVariant} size="48" />
           </div>
         {/if}
 
         {#if asset.type === AssetTypeEnum.Video}
           <div class="absolute top-0 h-full w-full">
             <VideoThumbnail
-              url={api.getAssetFileUrl(asset.id, false, true)}
-              enablePlayback={mouseOver}
+              url={getAssetFileUrl(asset.id, false, true)}
+              enablePlayback={mouseOver && $playVideoThumbnailOnHover}
               curve={selected}
               durationInSeconds={timeToSeconds(asset.duration)}
+              playbackOnIconHover
             />
           </div>
         {/if}
@@ -166,9 +208,9 @@
         {#if asset.type === AssetTypeEnum.Image && asset.livePhotoVideoId}
           <div class="absolute top-0 h-full w-full">
             <VideoThumbnail
-              url={api.getAssetFileUrl(asset.livePhotoVideoId, false, true)}
-              pauseIcon={MotionPauseOutline}
-              playIcon={MotionPlayOutline}
+              url={getAssetFileUrl(asset.livePhotoVideoId, false, true)}
+              pauseIcon={mdiMotionPauseOutline}
+              playIcon={mdiMotionPlayOutline}
               showTime={false}
               curve={selected}
               playbackOnIconHover

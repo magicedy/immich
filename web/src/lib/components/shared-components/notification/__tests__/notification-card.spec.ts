@@ -1,6 +1,5 @@
-import { describe, it, jest } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { cleanup, render, RenderResult } from '@testing-library/svelte';
+import { cleanup, render, type RenderResult } from '@testing-library/svelte';
 import { NotificationType } from '../notification';
 import NotificationCard from '../notification-card.svelte';
 
@@ -8,10 +7,10 @@ describe('NotificationCard component', () => {
   let sut: RenderResult<NotificationCard>;
 
   it('disposes timeout if already removed from the DOM', () => {
-    jest.spyOn(window, 'clearTimeout');
+    vi.spyOn(window, 'clearTimeout');
 
     sut = render(NotificationCard, {
-      notificationInfo: {
+      notification: {
         id: 1234,
         message: 'Notification message',
         timeout: 1000,
@@ -26,7 +25,7 @@ describe('NotificationCard component', () => {
 
   it('shows message and title', () => {
     sut = render(NotificationCard, {
-      notificationInfo: {
+      notification: {
         id: 1234,
         message: 'Notification message',
         timeout: 1000,

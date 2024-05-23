@@ -3,26 +3,30 @@
     notificationController,
     NotificationType,
   } from '$lib/components/shared-components/notification/notification';
-  import { api, UserResponseDto } from '@api';
   import { fade } from 'svelte/transition';
   import { handleError } from '../../utils/handle-error';
-  import SettingInputField, { SettingInputFieldType } from '../admin-page/settings/setting-input-field.svelte';
   import Button from '../elements/buttons/button.svelte';
+  import { user } from '$lib/stores/user.store';
+  import { cloneDeep } from 'lodash-es';
+  import { updateUser } from '@immich/sdk';
+  import SettingInputField, {
+    SettingInputFieldType,
+  } from '$lib/components/shared-components/settings/setting-input-field.svelte';
 
-  export let user: UserResponseDto;
+  let editedUser = cloneDeep($user);
 
   const handleSaveProfile = async () => {
     try {
-      const { data } = await api.userApi.updateUser({
+      const data = await updateUser({
         updateUserDto: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          id: editedUser.id,
+          email: editedUser.email,
+          name: editedUser.name,
         },
       });
 
-      Object.assign(user, data);
+      Object.assign(editedUser, data);
+      $user = data;
 
       notificationController.show({
         message: 'Saved profile',
@@ -41,23 +45,16 @@
         <SettingInputField
           inputType={SettingInputFieldType.TEXT}
           label="USER ID"
-          bind:value={user.id}
+          bind:value={editedUser.id}
           disabled={true}
         />
 
-        <SettingInputField inputType={SettingInputFieldType.EMAIL} label="EMAIL" bind:value={user.email} />
+        <SettingInputField inputType={SettingInputFieldType.EMAIL} label="EMAIL" bind:value={editedUser.email} />
 
         <SettingInputField
           inputType={SettingInputFieldType.TEXT}
-          label="FIRST NAME"
-          bind:value={user.firstName}
-          required={true}
-        />
-
-        <SettingInputField
-          inputType={SettingInputFieldType.TEXT}
-          label="LAST NAME"
-          bind:value={user.lastName}
+          label="NAME"
+          bind:value={editedUser.name}
           required={true}
         />
 
@@ -65,15 +62,7 @@
           inputType={SettingInputFieldType.TEXT}
           label="STORAGE LABEL"
           disabled={true}
-          value={user.storageLabel || ''}
-          required={false}
-        />
-
-        <SettingInputField
-          inputType={SettingInputFieldType.TEXT}
-          label="EXTERNAL PATH"
-          disabled={true}
-          value={user.externalPath || ''}
+          value={editedUser.storageLabel || ''}
           required={false}
         />
 

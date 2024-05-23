@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -26,6 +26,7 @@ class TranscodeHWAccel {
   static const nvenc = TranscodeHWAccel._(r'nvenc');
   static const qsv = TranscodeHWAccel._(r'qsv');
   static const vaapi = TranscodeHWAccel._(r'vaapi');
+  static const rkmpp = TranscodeHWAccel._(r'rkmpp');
   static const disabled = TranscodeHWAccel._(r'disabled');
 
   /// List of all possible values in this [enum][TranscodeHWAccel].
@@ -33,12 +34,13 @@ class TranscodeHWAccel {
     nvenc,
     qsv,
     vaapi,
+    rkmpp,
     disabled,
   ];
 
   static TranscodeHWAccel? fromJson(dynamic value) => TranscodeHWAccelTypeTransformer().decode(value);
 
-  static List<TranscodeHWAccel>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<TranscodeHWAccel> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <TranscodeHWAccel>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -75,6 +77,7 @@ class TranscodeHWAccelTypeTransformer {
         case r'nvenc': return TranscodeHWAccel.nvenc;
         case r'qsv': return TranscodeHWAccel.qsv;
         case r'vaapi': return TranscodeHWAccel.vaapi;
+        case r'rkmpp': return TranscodeHWAccel.rkmpp;
         case r'disabled': return TranscodeHWAccel.disabled;
         default:
           if (!allowNull) {

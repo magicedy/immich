@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -14,12 +14,16 @@ class CreateAlbumDto {
   /// Returns a new [CreateAlbumDto] instance.
   CreateAlbumDto({
     required this.albumName,
+    this.albumUsers = const [],
     this.assetIds = const [],
     this.description,
     this.sharedWithUserIds = const [],
   });
 
   String albumName;
+
+  /// This property was added in v1.104.0
+  List<AlbumUserCreateDto> albumUsers;
 
   List<String> assetIds;
 
@@ -31,29 +35,33 @@ class CreateAlbumDto {
   ///
   String? description;
 
+  /// This property was deprecated in v1.104.0
   List<String> sharedWithUserIds;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is CreateAlbumDto &&
-     other.albumName == albumName &&
-     other.assetIds == assetIds &&
-     other.description == description &&
-     other.sharedWithUserIds == sharedWithUserIds;
+    other.albumName == albumName &&
+    _deepEquality.equals(other.albumUsers, albumUsers) &&
+    _deepEquality.equals(other.assetIds, assetIds) &&
+    other.description == description &&
+    _deepEquality.equals(other.sharedWithUserIds, sharedWithUserIds);
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (albumName.hashCode) +
+    (albumUsers.hashCode) +
     (assetIds.hashCode) +
     (description == null ? 0 : description!.hashCode) +
     (sharedWithUserIds.hashCode);
 
   @override
-  String toString() => 'CreateAlbumDto[albumName=$albumName, assetIds=$assetIds, description=$description, sharedWithUserIds=$sharedWithUserIds]';
+  String toString() => 'CreateAlbumDto[albumName=$albumName, albumUsers=$albumUsers, assetIds=$assetIds, description=$description, sharedWithUserIds=$sharedWithUserIds]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'albumName'] = this.albumName;
+      json[r'albumUsers'] = this.albumUsers;
       json[r'assetIds'] = this.assetIds;
     if (this.description != null) {
       json[r'description'] = this.description;
@@ -73,12 +81,13 @@ class CreateAlbumDto {
 
       return CreateAlbumDto(
         albumName: mapValueOfType<String>(json, r'albumName')!,
-        assetIds: json[r'assetIds'] is List
-            ? (json[r'assetIds'] as List).cast<String>()
+        albumUsers: AlbumUserCreateDto.listFromJson(json[r'albumUsers']),
+        assetIds: json[r'assetIds'] is Iterable
+            ? (json[r'assetIds'] as Iterable).cast<String>().toList(growable: false)
             : const [],
         description: mapValueOfType<String>(json, r'description'),
-        sharedWithUserIds: json[r'sharedWithUserIds'] is List
-            ? (json[r'sharedWithUserIds'] as List).cast<String>()
+        sharedWithUserIds: json[r'sharedWithUserIds'] is Iterable
+            ? (json[r'sharedWithUserIds'] as Iterable).cast<String>().toList(growable: false)
             : const [],
       );
     }

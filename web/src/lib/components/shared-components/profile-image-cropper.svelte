@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { AssetResponseDto, api } from '@api';
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { notificationController, NotificationType } from './notification/notification';
+  import { user } from '$lib/stores/user.store';
   import { handleError } from '$lib/utils/handle-error';
+  import { createProfileImage, type AssetResponseDto } from '@immich/sdk';
   import domtoimage from 'dom-to-image';
+  import { onMount } from 'svelte';
   import PhotoViewer from '../asset-viewer/photo-viewer.svelte';
-  import BaseModal from './base-modal.svelte';
   import Button from '../elements/buttons/button.svelte';
+  import { NotificationType, notificationController } from './notification/notification';
+  import FullScreenModal from '$lib/components/shared-components/full-screen-modal.svelte';
 
   export let asset: AssetResponseDto;
+  export let onClose: () => void;
 
-  const dispatch = createEventDispatcher();
   let imgElement: HTMLDivElement;
 
   onMount(() => {
@@ -24,18 +25,18 @@
     const canvas = document.createElement('canvas');
     canvas.width = img.width;
     canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
+    const context = canvas.getContext('2d');
+    if (!context) {
       throw new Error('Could not get canvas context.');
     }
-    ctx.drawImage(img, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    context.drawImage(img, 0, 0);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData?.data;
     if (!data) {
       throw new Error('Could not get image data.');
     }
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i + 3] < 255) {
+    for (let index = 0; index < data.length; index += 4) {
+      if (data[index + 3] < 255) {
         return true;
       }
     }
@@ -54,36 +55,29 @@
         return;
       }
       const file = new File([blob], 'profile-picture.png', { type: 'image/png' });
-      await api.userApi.createProfileImage({ file });
+      const { profileImagePath } = await createProfileImage({ createProfileImageDto: { file } });
       notificationController.show({
         type: NotificationType.Info,
         message: 'Profile picture set.',
         timeout: 3000,
       });
-    } catch (err) {
-      handleError(err, 'Error setting profile picture.');
+      $user.profileImagePath = profileImagePath;
+    } catch (error) {
+      handleError(error, 'Error setting profile picture.');
     }
-    dispatch('close');
+    onClose();
   };
 </script>
 
-<BaseModal on:close>
-  <svelte:fragment slot="title">
-    <span class="flex place-items-center gap-2">
-      <p class="font-medium">Set profile picture</p>
-    </span>
-  </svelte:fragment>
+<FullScreenModal id="profile-image-cropper" title="Set profile picture" width="auto" {onClose}>
   <div class="flex place-items-center items-center justify-center">
     <div
-      class="relative flex aspect-square w-1/2 overflow-hidden rounded-full border-4 border-immich-primary bg-immich-dark-primary dark:border-immich-dark-primary dark:bg-immich-primary"
+      class="relative flex aspect-square w-[250px] overflow-hidden rounded-full border-4 border-immich-primary bg-immich-dark-primary dark:border-immich-dark-primary dark:bg-immich-primary"
     >
       <PhotoViewer bind:element={imgElement} {asset} />
     </div>
   </div>
-  <span class="flex justify-end p-4">
-    <Button on:click={handleSetProfilePicture}>
-      <p>Set as profile picture</p>
-    </Button>
-  </span>
-  <div class="mb-2 flex max-h-[400px] flex-col" />
-</BaseModal>
+  <svelte:fragment slot="sticky-bottom">
+    <Button fullwidth on:click={handleSetProfilePicture}>Set as profile picture</Button>
+  </svelte:fragment>
+</FullScreenModal>

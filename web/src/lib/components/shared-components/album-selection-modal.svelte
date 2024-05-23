@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { AlbumResponseDto, api } from '@api';
+  import Icon from '$lib/components/elements/icon.svelte';
+  import { getAllAlbums, type AlbumResponseDto } from '@immich/sdk';
+  import { mdiPlus } from '@mdi/js';
   import { createEventDispatcher, onMount } from 'svelte';
-  import Plus from 'svelte-material-icons/Plus.svelte';
-  import BaseModal from './base-modal.svelte';
   import AlbumListItem from '../asset-viewer/album-list-item.svelte';
+  import { normalizeSearchString } from '$lib/utils/string-utils';
+  import FullScreenModal from '$lib/components/shared-components/full-screen-modal.svelte';
 
   let albums: AlbumResponseDto[] = [];
   let recentAlbums: AlbumResponseDto[] = [];
@@ -11,51 +13,46 @@
   let loading = true;
   let search = '';
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    newAlbum: string;
+    album: AlbumResponseDto;
+  }>();
 
   export let shared: boolean;
+  export let onClose: () => void;
 
   onMount(async () => {
-    const { data } = await api.albumApi.getAllAlbums({ shared: shared || undefined });
-    albums = data;
-
+    albums = await getAllAlbums({ shared: shared || undefined });
     recentAlbums = albums.sort((a, b) => (new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1)).slice(0, 3);
-
     loading = false;
   });
 
   $: {
-    if (search.length > 0 && albums.length > 0) {
-      filteredAlbums = albums.filter((album) => {
-        return album.albumName.toLowerCase().includes(search.toLowerCase());
-      });
-    } else {
-      filteredAlbums = albums;
-    }
+    filteredAlbums =
+      search.length > 0 && albums.length > 0
+        ? albums.filter((album) => {
+            return normalizeSearchString(album.albumName).includes(normalizeSearchString(search));
+          })
+        : albums;
   }
 
   const handleSelect = (album: AlbumResponseDto) => {
-    dispatch('album', { album });
+    dispatch('album', album);
   };
 
   const handleNew = () => {
+    dispatch('newAlbum', search.length > 0 ? search : '');
+  };
+
+  const getTitle = () => {
     if (shared) {
-      dispatch('newAlbum', { albumName: search.length > 0 ? search : 'Untitled' });
-    } else {
-      dispatch('newSharedAlbum', { albumName: search.length > 0 ? search : 'Untitled' });
+      return 'Add to shared album';
     }
+    return 'Add to album';
   };
 </script>
 
-<BaseModal on:close={() => dispatch('close')}>
-  <svelte:fragment slot="title">
-    <span class="flex place-items-center gap-2">
-      <p class="font-medium">
-        Add to {#if shared}Shared {/if} Album
-      </p>
-    </span>
-  </svelte:fragment>
-
+<FullScreenModal id="album-selection-modal" title={getTitle()} {onClose}>
   <div class="mb-2 flex max-h-[400px] flex-col">
     {#if loading}
       {#each { length: 3 } as _}
@@ -71,36 +68,35 @@
         </div>
       {/each}
     {:else}
-      <!-- svelte-ignore a11y-autofocus -->
       <input
         class="border-b-4 border-immich-bg bg-immich-bg px-6 py-2 text-2xl focus:border-immich-primary dark:border-immich-dark-gray dark:bg-immich-dark-gray dark:focus:border-immich-dark-primary"
         placeholder="Search"
-        autofocus
         bind:value={search}
       />
       <div class="immich-scrollbar overflow-y-auto">
         <button
           on:click={handleNew}
-          class="flex w-full items-center gap-4 px-6 py-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+          class="flex w-full items-center gap-4 px-6 py-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl"
         >
           <div class="flex h-12 w-12 items-center justify-center">
-            <Plus size="30" />
+            <Icon path={mdiPlus} size="30" />
           </div>
           <p class="">
-            New {#if shared}Shared {/if}Album {#if search.length > 0}<b>{search}</b>{/if}
+            New Album {#if search.length > 0}<b>{search}</b>{/if}
           </p>
         </button>
         {#if filteredAlbums.length > 0}
           {#if !shared && search.length === 0}
             <p class="px-5 py-3 text-xs">RECENT</p>
             {#each recentAlbums as album (album.id)}
-              <AlbumListItem variant="simple" {album} on:album={() => handleSelect(album)} />
+              <AlbumListItem {album} on:album={() => handleSelect(album)} />
             {/each}
           {/if}
 
           {#if !shared}
             <p class="px-5 py-3 text-xs">
-              {#if search.length === 0}ALL {/if}ALBUMS
+              {#if search.length === 0}ALL
+              {/if}ALBUMS
             </p>
           {/if}
           {#each filteredAlbums as album (album.id)}
@@ -114,4 +110,4 @@
       </div>
     {/if}
   </div>
-</BaseModal>
+</FullScreenModal>

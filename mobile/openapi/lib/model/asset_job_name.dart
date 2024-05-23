@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -36,7 +36,7 @@ class AssetJobName {
 
   static AssetJobName? fromJson(dynamic value) => AssetJobNameTypeTransformer().decode(value);
 
-  static List<AssetJobName>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<AssetJobName> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <AssetJobName>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {

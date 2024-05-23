@@ -1,14 +1,13 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const prism = require('prism-react-renderer');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Immich',
   tagline: 'High performance self-hosted photo and video backup solution directly from your mobile phone',
-  url: 'https://documentation.immich.app',
+  url: 'https://immich.app',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -56,7 +55,7 @@ const config = {
           editUrl: 'https://github.com/immich-app/immich/tree/main/docs/',
         },
         api: {
-          path: '../server/immich-openapi-specs.json',
+          path: '../open-api/immich-openapi-specs.json',
           routeBasePath: '/docs/api',
         },
         // blog: {
@@ -90,15 +89,20 @@ const config = {
       },
       navbar: {
         logo: {
-          alt: 'Immich University Logo',
-          src: 'img/color-logo.png',
-          srcDark: 'img/logo.png',
+          alt: 'Immich Logo',
+          src: 'img/immich-logo-inline-light.png',
+          srcDark: 'img/immich-logo-inline-dark.png',
         },
         items: [
           {
             to: '/docs/overview/introduction',
             position: 'right',
             label: 'Docs',
+          },
+          {
+            to: '/milestones',
+            position: 'right',
+            label: 'Milestones',
           },
           {
             to: '/docs/api',
@@ -113,6 +117,11 @@ const config = {
           {
             href: 'https://github.com/immich-app/immich',
             label: 'GitHub',
+            position: 'right',
+          },
+          {
+            href: 'https://discord.gg/D8JsnBEuKb',
+            label: 'Discord',
             position: 'right',
           },
         ],
@@ -140,6 +149,10 @@ const config = {
                 label: 'Discord',
                 href: 'https://discord.com/invite/D8JsnBEuKb',
               },
+              {
+                label: 'Reddit',
+                href: 'https://www.reddit.com/r/immich/',
+              },
             ],
           },
           {
@@ -153,14 +166,19 @@ const config = {
                 label: 'GitHub',
                 href: 'https://github.com/immich-app/immich',
               },
+              {
+                label: 'YouTube',
+                href: 'https://www.youtube.com/@immich-app',
+              },
             ],
           },
         ],
-        copyright: `Immich is available as open source under the terms of the MIT License.`,
+        copyright: `Immich is available as open source under the terms of the GNU AGPL v3 License.`,
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
+        theme: prism.themes.github,
+        darkTheme: prism.themes.dracula,
+        additionalLanguages: ['sql', 'diff', 'bash', 'powershell', 'nginx'],
       },
       image: 'overview/img/feature-panel.png',
     }),

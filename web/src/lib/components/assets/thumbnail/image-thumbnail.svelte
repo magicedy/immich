@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { imageLoad } from '$lib/utils/image-load';
+  import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { thumbHashToDataURL } from 'thumbhash';
+  // eslint-disable-next-line unicorn/prefer-node-protocol
   import { Buffer } from 'buffer';
-  import EyeOffOutline from 'svelte-material-icons/EyeOffOutline.svelte';
+  import { mdiEyeOffOutline } from '@mdi/js';
+  import Icon from '$lib/components/elements/icon.svelte';
 
   export let url: string;
-  export let altText: string;
+  export let altText: string | undefined;
   export let title: string | null = null;
   export let heightStyle: string | undefined = undefined;
   export let widthStyle: string;
@@ -16,12 +18,22 @@
   export let circle = false;
   export let hidden = false;
   export let border = false;
-  let complete = false;
+  export let preload = true;
+  export let eyeColor: 'black' | 'white' = 'white';
 
-  export let eyeColor = 'white';
+  let complete = false;
+  let img: HTMLImageElement;
+
+  onMount(async () => {
+    await img.decode();
+    await tick();
+    complete = true;
+  });
 </script>
 
 <img
+  bind:this={img}
+  loading={preload ? 'eager' : 'lazy'}
   style:width={widthStyle}
   style:height={heightStyle}
   style:filter={hidden ? 'grayscale(50%)' : 'none'}
@@ -35,15 +47,14 @@
   class:rounded-xl={curve}
   class:shadow-lg={shadow}
   class:rounded-full={circle}
+  class:aspect-square={circle || !heightStyle}
   class:opacity-0={!thumbhash && !complete}
   draggable="false"
-  use:imageLoad
-  on:image-load|once={() => (complete = true)}
 />
 
 {#if hidden}
   <div class="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] transform">
-    <EyeOffOutline size="2em" color={eyeColor} />
+    <Icon {title} path={mdiEyeOffOutline} size="2em" class="text-{eyeColor}" />
   </div>
 {/if}
 

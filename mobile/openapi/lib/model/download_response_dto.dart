@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -23,8 +23,8 @@ class DownloadResponseDto {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is DownloadResponseDto &&
-     other.archives == archives &&
-     other.totalSize == totalSize;
+    _deepEquality.equals(other.archives, archives) &&
+    other.totalSize == totalSize;
 
   @override
   int get hashCode =>

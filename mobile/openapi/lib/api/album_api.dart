@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -16,7 +16,7 @@ class AlbumApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'PUT /album/{id}/assets' operation and returns the [Response].
+  /// Performs an HTTP 'PUT /albums/{id}/assets' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -26,7 +26,7 @@ class AlbumApi {
   /// * [String] key:
   Future<Response> addAssetsToAlbumWithHttpInfo(String id, BulkIdsDto bulkIdsDto, { String? key, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}/assets'
+    final path = r'/albums/{id}/assets'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -73,13 +73,13 @@ class AlbumApi {
       final responseBody = await _decodeBodyBytes(response);
       return (await apiClient.deserializeAsync(responseBody, 'List<BulkIdResponseDto>') as List)
         .cast<BulkIdResponseDto>()
-        .toList();
+        .toList(growable: false);
 
     }
     return null;
   }
 
-  /// Performs an HTTP 'PUT /album/{id}/users' operation and returns the [Response].
+  /// Performs an HTTP 'PUT /albums/{id}/users' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -87,7 +87,7 @@ class AlbumApi {
   /// * [AddUsersDto] addUsersDto (required):
   Future<Response> addUsersToAlbumWithHttpInfo(String id, AddUsersDto addUsersDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}/users'
+    final path = r'/albums/{id}/users'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -131,13 +131,13 @@ class AlbumApi {
     return null;
   }
 
-  /// Performs an HTTP 'POST /album' operation and returns the [Response].
+  /// Performs an HTTP 'POST /albums' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [CreateAlbumDto] createAlbumDto (required):
   Future<Response> createAlbumWithHttpInfo(CreateAlbumDto createAlbumDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/album';
+    final path = r'/albums';
 
     // ignore: prefer_final_locals
     Object? postBody = createAlbumDto;
@@ -178,13 +178,13 @@ class AlbumApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /album/{id}' operation and returns the [Response].
+  /// Performs an HTTP 'DELETE /albums/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> deleteAlbumWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}'
+    final path = r'/albums/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -218,10 +218,10 @@ class AlbumApi {
     }
   }
 
-  /// Performs an HTTP 'GET /album/count' operation and returns the [Response].
+  /// Performs an HTTP 'GET /albums/count' operation and returns the [Response].
   Future<Response> getAlbumCountWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/album/count';
+    final path = r'/albums/count';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -259,17 +259,17 @@ class AlbumApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /album/{id}' operation and returns the [Response].
+  /// Performs an HTTP 'GET /albums/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
   ///
-  /// * [bool] withoutAssets:
-  ///
   /// * [String] key:
-  Future<Response> getAlbumInfoWithHttpInfo(String id, { bool? withoutAssets, String? key, }) async {
+  ///
+  /// * [bool] withoutAssets:
+  Future<Response> getAlbumInfoWithHttpInfo(String id, { String? key, bool? withoutAssets, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}'
+    final path = r'/albums/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -279,11 +279,11 @@ class AlbumApi {
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    if (withoutAssets != null) {
-      queryParams.addAll(_queryParams('', 'withoutAssets', withoutAssets));
-    }
     if (key != null) {
       queryParams.addAll(_queryParams('', 'key', key));
+    }
+    if (withoutAssets != null) {
+      queryParams.addAll(_queryParams('', 'withoutAssets', withoutAssets));
     }
 
     const contentTypes = <String>[];
@@ -304,11 +304,11 @@ class AlbumApi {
   ///
   /// * [String] id (required):
   ///
-  /// * [bool] withoutAssets:
-  ///
   /// * [String] key:
-  Future<AlbumResponseDto?> getAlbumInfo(String id, { bool? withoutAssets, String? key, }) async {
-    final response = await getAlbumInfoWithHttpInfo(id,  withoutAssets: withoutAssets, key: key, );
+  ///
+  /// * [bool] withoutAssets:
+  Future<AlbumResponseDto?> getAlbumInfo(String id, { String? key, bool? withoutAssets, }) async {
+    final response = await getAlbumInfoWithHttpInfo(id,  key: key, withoutAssets: withoutAssets, );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -322,16 +322,16 @@ class AlbumApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /album' operation and returns the [Response].
+  /// Performs an HTTP 'GET /albums' operation and returns the [Response].
   /// Parameters:
-  ///
-  /// * [bool] shared:
   ///
   /// * [String] assetId:
   ///   Only returns albums that contain the asset Ignores the shared parameter undefined: get all albums
-  Future<Response> getAllAlbumsWithHttpInfo({ bool? shared, String? assetId, }) async {
+  ///
+  /// * [bool] shared:
+  Future<Response> getAllAlbumsWithHttpInfo({ String? assetId, bool? shared, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/album';
+    final path = r'/albums';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -340,11 +340,11 @@ class AlbumApi {
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    if (shared != null) {
-      queryParams.addAll(_queryParams('', 'shared', shared));
-    }
     if (assetId != null) {
       queryParams.addAll(_queryParams('', 'assetId', assetId));
+    }
+    if (shared != null) {
+      queryParams.addAll(_queryParams('', 'shared', shared));
     }
 
     const contentTypes = <String>[];
@@ -363,12 +363,12 @@ class AlbumApi {
 
   /// Parameters:
   ///
-  /// * [bool] shared:
-  ///
   /// * [String] assetId:
   ///   Only returns albums that contain the asset Ignores the shared parameter undefined: get all albums
-  Future<List<AlbumResponseDto>?> getAllAlbums({ bool? shared, String? assetId, }) async {
-    final response = await getAllAlbumsWithHttpInfo( shared: shared, assetId: assetId, );
+  ///
+  /// * [bool] shared:
+  Future<List<AlbumResponseDto>?> getAllAlbums({ String? assetId, bool? shared, }) async {
+    final response = await getAllAlbumsWithHttpInfo( assetId: assetId, shared: shared, );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -379,13 +379,13 @@ class AlbumApi {
       final responseBody = await _decodeBodyBytes(response);
       return (await apiClient.deserializeAsync(responseBody, 'List<AlbumResponseDto>') as List)
         .cast<AlbumResponseDto>()
-        .toList();
+        .toList(growable: false);
 
     }
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /album/{id}/assets' operation and returns the [Response].
+  /// Performs an HTTP 'DELETE /albums/{id}/assets' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -393,7 +393,7 @@ class AlbumApi {
   /// * [BulkIdsDto] bulkIdsDto (required):
   Future<Response> removeAssetFromAlbumWithHttpInfo(String id, BulkIdsDto bulkIdsDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}/assets'
+    final path = r'/albums/{id}/assets'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -434,13 +434,13 @@ class AlbumApi {
       final responseBody = await _decodeBodyBytes(response);
       return (await apiClient.deserializeAsync(responseBody, 'List<BulkIdResponseDto>') as List)
         .cast<BulkIdResponseDto>()
-        .toList();
+        .toList(growable: false);
 
     }
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /album/{id}/user/{userId}' operation and returns the [Response].
+  /// Performs an HTTP 'DELETE /albums/{id}/user/{userId}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -448,7 +448,7 @@ class AlbumApi {
   /// * [String] userId (required):
   Future<Response> removeUserFromAlbumWithHttpInfo(String id, String userId,) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}/user/{userId}'
+    final path = r'/albums/{id}/user/{userId}'
       .replaceAll('{id}', id)
       .replaceAll('{userId}', userId);
 
@@ -485,7 +485,7 @@ class AlbumApi {
     }
   }
 
-  /// Performs an HTTP 'PATCH /album/{id}' operation and returns the [Response].
+  /// Performs an HTTP 'PATCH /albums/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -493,7 +493,7 @@ class AlbumApi {
   /// * [UpdateAlbumDto] updateAlbumDto (required):
   Future<Response> updateAlbumInfoWithHttpInfo(String id, UpdateAlbumDto updateAlbumDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/album/{id}'
+    final path = r'/albums/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -535,5 +535,54 @@ class AlbumApi {
     
     }
     return null;
+  }
+
+  /// Performs an HTTP 'PUT /albums/{id}/user/{userId}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [UpdateAlbumUserDto] updateAlbumUserDto (required):
+  Future<Response> updateAlbumUserWithHttpInfo(String id, String userId, UpdateAlbumUserDto updateAlbumUserDto,) async {
+    // ignore: prefer_const_declarations
+    final path = r'/albums/{id}/user/{userId}'
+      .replaceAll('{id}', id)
+      .replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = updateAlbumUserDto;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [UpdateAlbumUserDto] updateAlbumUserDto (required):
+  Future<void> updateAlbumUser(String id, String userId, UpdateAlbumUserDto updateAlbumUserDto,) async {
+    final response = await updateAlbumUserWithHttpInfo(id, userId, updateAlbumUserDto,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 }

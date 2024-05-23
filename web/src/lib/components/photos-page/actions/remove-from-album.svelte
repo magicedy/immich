@@ -5,13 +5,14 @@
     NotificationType,
     notificationController,
   } from '$lib/components/shared-components/notification/notification';
-  import { AlbumResponseDto, api } from '@api';
-  import DeleteOutline from 'svelte-material-icons/DeleteOutline.svelte';
+  import { getAlbumInfo, removeAssetFromAlbum, type AlbumResponseDto } from '@immich/sdk';
+  import { mdiDeleteOutline, mdiImageRemoveOutline } from '@mdi/js';
   import MenuOption from '../../shared-components/context-menu/menu-option.svelte';
   import { getAssetControlContext } from '../asset-select-control-bar.svelte';
+  import { s } from '$lib/utils';
 
   export let album: AlbumResponseDto;
-  export let onRemove: ((assetIds: string[]) => void) | undefined = undefined;
+  export let onRemove: ((assetIds: string[]) => void) | undefined;
   export let menuItem = false;
 
   const { getAssets, clearSelect } = getAssetControlContext();
@@ -20,26 +21,25 @@
 
   const removeFromAlbum = async () => {
     try {
-      const ids = Array.from(getAssets()).map((a) => a.id);
-      const { data: results } = await api.albumApi.removeAssetFromAlbum({
+      const ids = [...getAssets()].map((a) => a.id);
+      const results = await removeAssetFromAlbum({
         id: album.id,
         bulkIdsDto: { ids },
       });
 
-      const { data } = await api.albumApi.getAlbumInfo({ id: album.id });
-      album = data;
+      album = await getAlbumInfo({ id: album.id });
 
       onRemove?.(ids);
 
       const count = results.filter(({ success }) => success).length;
       notificationController.show({
         type: NotificationType.Info,
-        message: `Removed ${count} asset${count === 1 ? '' : 's'}`,
+        message: `Removed ${count} asset${s(count)}`,
       });
 
       clearSelect();
-    } catch (e) {
-      console.error('Error [album-viewer] [removeAssetFromAlbum]', e);
+    } catch (error) {
+      console.error('Error [album-viewer] [removeAssetFromAlbum]', error);
       notificationController.show({
         type: NotificationType.Error,
         message: 'Error removing assets from album, check console for more details',
@@ -51,17 +51,18 @@
 </script>
 
 {#if menuItem}
-  <MenuOption text="Remove from album" on:click={() => (isShowConfirmation = true)} />
+  <MenuOption text="Remove from album" icon={mdiImageRemoveOutline} on:click={() => (isShowConfirmation = true)} />
 {:else}
-  <CircleIconButton title="Remove from album" logo={DeleteOutline} on:click={() => (isShowConfirmation = true)} />
+  <CircleIconButton title="Remove from album" icon={mdiDeleteOutline} on:click={() => (isShowConfirmation = true)} />
 {/if}
 
 {#if isShowConfirmation}
   <ConfirmDialogue
+    id="remove-from-album-modal"
     title="Remove from {album.albumName}"
     confirmText="Remove"
-    on:confirm={removeFromAlbum}
-    on:cancel={() => (isShowConfirmation = false)}
+    onConfirm={removeFromAlbum}
+    onClose={() => (isShowConfirmation = false)}
   >
     <svelte:fragment slot="prompt">
       <p>

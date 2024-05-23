@@ -7,18 +7,15 @@
   import ImmichLogo from './immich-logo.svelte';
   import { getFilenameExtension } from '$lib/utils/asset-utils';
   import { uploadAssetsStore } from '$lib/stores/upload';
-  import Cancel from 'svelte-material-icons/Cancel.svelte';
-  import Refresh from 'svelte-material-icons/Refresh.svelte';
+  import Icon from '$lib/components/elements/icon.svelte';
   import { fileUploadHandler } from '$lib/utils/file-uploader';
+  import { mdiRefresh, mdiCancel } from '@mdi/js';
 
   export let uploadAsset: UploadAsset;
 
-  let showFallbackImage = uploadAsset.state === UploadState.PENDING;
-  const previewURL = URL.createObjectURL(uploadAsset.file);
-
-  const handleRetry = (uploadAsset: UploadAsset) => {
+  const handleRetry = async (uploadAsset: UploadAsset) => {
     uploadAssetsStore.removeUploadAsset(uploadAsset.id);
-    fileUploadHandler([uploadAsset.file], uploadAsset.albumId);
+    await fileUploadHandler([uploadAsset.file], uploadAsset.albumId);
   };
 </script>
 
@@ -27,29 +24,11 @@
   out:fade={{ duration: 100 }}
   class="flex flex-col rounded-lg bg-immich-bg text-xs dark:bg-immich-dark-bg"
 >
-  <div class="grid grid-cols-[65px_auto_auto]">
-    <div class="relative h-[65px]">
-      {#if showFallbackImage || true}
-        <div in:fade={{ duration: 250 }}>
-          <ImmichLogo class="h-[65px] w-[65px] rounded-bl-lg rounded-tl-lg object-cover p-2" />
-        </div>
-      {:else}
-        <img
-          in:fade={{ duration: 250 }}
-          on:load={() => {
-            URL.revokeObjectURL(previewURL);
-          }}
-          on:error={() => {
-            URL.revokeObjectURL(previewURL);
-            showFallbackImage = true;
-          }}
-          src={previewURL}
-          alt="Preview of asset"
-          class="h-[65px] w-[65px] rounded-bl-lg rounded-tl-lg object-cover"
-          draggable="false"
-        />
-      {/if}
-
+  <div class="grid grid-cols-[65px_auto_auto] max-h-[70px]">
+    <div class="relative">
+      <div in:fade={{ duration: 250 }}>
+        <ImmichLogo noText class="h-[65px] w-[65px] rounded-bl-lg rounded-tl-lg object-cover p-2" />
+      </div>
       <div class="absolute bottom-0 left-0 h-[25px] w-full rounded-bl-md bg-immich-primary/30">
         <p
           class="absolute bottom-1 right-1 stroke-immich-primary object-right-bottom font-semibold uppercase text-white/95 dark:text-gray-100"
@@ -66,7 +45,8 @@
       />
 
       <div
-        class="relative mt-[5px] h-[15px] w-full rounded-md bg-gray-300 text-white dark:bg-immich-dark-gray dark:text-black"
+        class="relative mt-[5px] h-[15px] w-full rounded-md bg-gray-300 text-white dark:bg-immich-dark-gray"
+        class:dark:text-black={uploadAsset.state === UploadState.STARTED}
       >
         {#if uploadAsset.state === UploadState.STARTED}
           <div class="h-[15px] rounded-md bg-immich-primary transition-all" style={`width: ${uploadAsset.progress}%`} />
@@ -74,7 +54,7 @@
             {#if uploadAsset.message}
               {uploadAsset.message}
             {:else}
-              {uploadAsset.progress}/100 - {asByteUnitString(uploadAsset.speed || 0, $locale)}/s - {uploadAsset.eta}s
+              {uploadAsset.progress}% - {asByteUnitString(uploadAsset.speed || 0, $locale)}/s - {uploadAsset.eta}s
             {/if}
           </p>
         {:else if uploadAsset.state === UploadState.PENDING}
@@ -87,32 +67,32 @@
           <div class="h-[15px] rounded-md bg-immich-warning transition-all" style="width: 100%" />
           <p class="absolute top-0 h-full w-full text-center text-[10px]">
             Skipped
-            {#if uploadAsset.message} ({uploadAsset.message}){/if}
+            {#if uploadAsset.message}
+              ({uploadAsset.message})
+            {/if}
           </p>
         {:else if uploadAsset.state === UploadState.DONE}
           <div class="h-[15px] rounded-md bg-immich-success transition-all" style="width: 100%" />
           <p class="absolute top-0 h-full w-full text-center text-[10px]">
             Uploaded
-            {#if uploadAsset.message} ({uploadAsset.message}){/if}
+            {#if uploadAsset.message}
+              ({uploadAsset.message})
+            {/if}
           </p>
         {/if}
       </div>
     </div>
     {#if uploadAsset.state === UploadState.ERROR}
-      <div class="flex h-full flex-col place-content-center place-items-center justify-items-center pr-2">
-        <button
-          on:click={() => handleRetry(uploadAsset)}
-          title="Retry upload"
-          class="flex h-full w-full place-content-center place-items-center text-sm"
-        >
-          <span class="text-immich-dark-gray dark:text-immich-dark-fg"><Refresh size="20" /></span>
+      <div class="flex h-full flex-col place-content-evenly place-items-center justify-items-center pr-2">
+        <button on:click={() => handleRetry(uploadAsset)} title="Retry upload" class="flex text-sm">
+          <span class="text-immich-dark-gray dark:text-immich-dark-fg"><Icon path={mdiRefresh} size="20" /></span>
         </button>
         <button
           on:click={() => uploadAssetsStore.removeUploadAsset(uploadAsset.id)}
           title="Dismiss error"
-          class="flex h-full w-full place-content-center place-items-center text-sm"
+          class="flex text-sm"
         >
-          <span class="text-immich-error"><Cancel size="20" /></span>
+          <span class="text-immich-error"><Icon path={mdiCancel} size="20" /></span>
         </button>
       </div>
     {/if}
@@ -120,7 +100,7 @@
 
   {#if uploadAsset.state === UploadState.ERROR}
     <div class="flex flex-row justify-between">
-      <p class="w-full rounded-md p-1 px-2 text-justify text-[10px] text-immich-error">
+      <p class="w-full rounded-md py-1 px-2 text-justify text-[10px] text-immich-error">
         {uploadAsset.error}
       </p>
     </div>

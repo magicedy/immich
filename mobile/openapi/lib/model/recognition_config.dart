@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -15,6 +15,7 @@ class RecognitionConfig {
   RecognitionConfig({
     required this.enabled,
     required this.maxDistance,
+    required this.minFaces,
     required this.minScore,
     required this.modelName,
     this.modelType,
@@ -22,9 +23,16 @@ class RecognitionConfig {
 
   bool enabled;
 
-  int maxDistance;
+  /// Minimum value: 0
+  /// Maximum value: 2
+  double maxDistance;
 
-  int minScore;
+  /// Minimum value: 1
+  int minFaces;
+
+  /// Minimum value: 0
+  /// Maximum value: 1
+  double minScore;
 
   String modelName;
 
@@ -38,28 +46,31 @@ class RecognitionConfig {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is RecognitionConfig &&
-     other.enabled == enabled &&
-     other.maxDistance == maxDistance &&
-     other.minScore == minScore &&
-     other.modelName == modelName &&
-     other.modelType == modelType;
+    other.enabled == enabled &&
+    other.maxDistance == maxDistance &&
+    other.minFaces == minFaces &&
+    other.minScore == minScore &&
+    other.modelName == modelName &&
+    other.modelType == modelType;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (enabled.hashCode) +
     (maxDistance.hashCode) +
+    (minFaces.hashCode) +
     (minScore.hashCode) +
     (modelName.hashCode) +
     (modelType == null ? 0 : modelType!.hashCode);
 
   @override
-  String toString() => 'RecognitionConfig[enabled=$enabled, maxDistance=$maxDistance, minScore=$minScore, modelName=$modelName, modelType=$modelType]';
+  String toString() => 'RecognitionConfig[enabled=$enabled, maxDistance=$maxDistance, minFaces=$minFaces, minScore=$minScore, modelName=$modelName, modelType=$modelType]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'enabled'] = this.enabled;
       json[r'maxDistance'] = this.maxDistance;
+      json[r'minFaces'] = this.minFaces;
       json[r'minScore'] = this.minScore;
       json[r'modelName'] = this.modelName;
     if (this.modelType != null) {
@@ -79,8 +90,9 @@ class RecognitionConfig {
 
       return RecognitionConfig(
         enabled: mapValueOfType<bool>(json, r'enabled')!,
-        maxDistance: mapValueOfType<int>(json, r'maxDistance')!,
-        minScore: mapValueOfType<int>(json, r'minScore')!,
+        maxDistance: mapValueOfType<double>(json, r'maxDistance')!,
+        minFaces: mapValueOfType<int>(json, r'minFaces')!,
+        minScore: mapValueOfType<double>(json, r'minScore')!,
         modelName: mapValueOfType<String>(json, r'modelName')!,
         modelType: ModelType.fromJson(json[r'modelType']),
       );
@@ -132,6 +144,7 @@ class RecognitionConfig {
   static const requiredKeys = <String>{
     'enabled',
     'maxDistance',
+    'minFaces',
     'minScore',
     'modelName',
   };

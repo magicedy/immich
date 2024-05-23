@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -13,21 +13,26 @@ part of openapi.api;
 class ServerFeaturesDto {
   /// Returns a new [ServerFeaturesDto] instance.
   ServerFeaturesDto({
-    required this.clipEncode,
     required this.configFile,
+    required this.duplicateDetection,
+    required this.email,
     required this.facialRecognition,
     required this.map,
     required this.oauth,
     required this.oauthAutoLaunch,
     required this.passwordLogin,
+    required this.reverseGeocoding,
     required this.search,
     required this.sidecar,
-    required this.tagImage,
+    required this.smartSearch,
+    required this.trash,
   });
 
-  bool clipEncode;
-
   bool configFile;
+
+  bool duplicateDetection;
+
+  bool email;
 
   bool facialRecognition;
 
@@ -39,54 +44,67 @@ class ServerFeaturesDto {
 
   bool passwordLogin;
 
+  bool reverseGeocoding;
+
   bool search;
 
   bool sidecar;
 
-  bool tagImage;
+  bool smartSearch;
+
+  bool trash;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ServerFeaturesDto &&
-     other.clipEncode == clipEncode &&
-     other.configFile == configFile &&
-     other.facialRecognition == facialRecognition &&
-     other.map == map &&
-     other.oauth == oauth &&
-     other.oauthAutoLaunch == oauthAutoLaunch &&
-     other.passwordLogin == passwordLogin &&
-     other.search == search &&
-     other.sidecar == sidecar &&
-     other.tagImage == tagImage;
+    other.configFile == configFile &&
+    other.duplicateDetection == duplicateDetection &&
+    other.email == email &&
+    other.facialRecognition == facialRecognition &&
+    other.map == map &&
+    other.oauth == oauth &&
+    other.oauthAutoLaunch == oauthAutoLaunch &&
+    other.passwordLogin == passwordLogin &&
+    other.reverseGeocoding == reverseGeocoding &&
+    other.search == search &&
+    other.sidecar == sidecar &&
+    other.smartSearch == smartSearch &&
+    other.trash == trash;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (clipEncode.hashCode) +
     (configFile.hashCode) +
+    (duplicateDetection.hashCode) +
+    (email.hashCode) +
     (facialRecognition.hashCode) +
     (map.hashCode) +
     (oauth.hashCode) +
     (oauthAutoLaunch.hashCode) +
     (passwordLogin.hashCode) +
+    (reverseGeocoding.hashCode) +
     (search.hashCode) +
     (sidecar.hashCode) +
-    (tagImage.hashCode);
+    (smartSearch.hashCode) +
+    (trash.hashCode);
 
   @override
-  String toString() => 'ServerFeaturesDto[clipEncode=$clipEncode, configFile=$configFile, facialRecognition=$facialRecognition, map=$map, oauth=$oauth, oauthAutoLaunch=$oauthAutoLaunch, passwordLogin=$passwordLogin, search=$search, sidecar=$sidecar, tagImage=$tagImage]';
+  String toString() => 'ServerFeaturesDto[configFile=$configFile, duplicateDetection=$duplicateDetection, email=$email, facialRecognition=$facialRecognition, map=$map, oauth=$oauth, oauthAutoLaunch=$oauthAutoLaunch, passwordLogin=$passwordLogin, reverseGeocoding=$reverseGeocoding, search=$search, sidecar=$sidecar, smartSearch=$smartSearch, trash=$trash]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-      json[r'clipEncode'] = this.clipEncode;
       json[r'configFile'] = this.configFile;
+      json[r'duplicateDetection'] = this.duplicateDetection;
+      json[r'email'] = this.email;
       json[r'facialRecognition'] = this.facialRecognition;
       json[r'map'] = this.map;
       json[r'oauth'] = this.oauth;
       json[r'oauthAutoLaunch'] = this.oauthAutoLaunch;
       json[r'passwordLogin'] = this.passwordLogin;
+      json[r'reverseGeocoding'] = this.reverseGeocoding;
       json[r'search'] = this.search;
       json[r'sidecar'] = this.sidecar;
-      json[r'tagImage'] = this.tagImage;
+      json[r'smartSearch'] = this.smartSearch;
+      json[r'trash'] = this.trash;
     return json;
   }
 
@@ -98,16 +116,19 @@ class ServerFeaturesDto {
       final json = value.cast<String, dynamic>();
 
       return ServerFeaturesDto(
-        clipEncode: mapValueOfType<bool>(json, r'clipEncode')!,
         configFile: mapValueOfType<bool>(json, r'configFile')!,
+        duplicateDetection: mapValueOfType<bool>(json, r'duplicateDetection')!,
+        email: mapValueOfType<bool>(json, r'email')!,
         facialRecognition: mapValueOfType<bool>(json, r'facialRecognition')!,
         map: mapValueOfType<bool>(json, r'map')!,
         oauth: mapValueOfType<bool>(json, r'oauth')!,
         oauthAutoLaunch: mapValueOfType<bool>(json, r'oauthAutoLaunch')!,
         passwordLogin: mapValueOfType<bool>(json, r'passwordLogin')!,
+        reverseGeocoding: mapValueOfType<bool>(json, r'reverseGeocoding')!,
         search: mapValueOfType<bool>(json, r'search')!,
         sidecar: mapValueOfType<bool>(json, r'sidecar')!,
-        tagImage: mapValueOfType<bool>(json, r'tagImage')!,
+        smartSearch: mapValueOfType<bool>(json, r'smartSearch')!,
+        trash: mapValueOfType<bool>(json, r'trash')!,
       );
     }
     return null;
@@ -155,16 +176,19 @@ class ServerFeaturesDto {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'clipEncode',
     'configFile',
+    'duplicateDetection',
+    'email',
     'facialRecognition',
     'map',
     'oauth',
     'oauthAutoLaunch',
     'passwordLogin',
+    'reverseGeocoding',
     'search',
     'sidecar',
-    'tagImage',
+    'smartSearch',
+    'trash',
   };
 }
 

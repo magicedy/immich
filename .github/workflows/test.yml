@@ -10,26 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e-tests:
-    name: Run end-to-end test suites
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./server
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run npm install
-        run: npm ci
-
-      - name: Run e2e tests
-        run: npm run test:e2e
-        if: ${{ !cancelled() }}
-
   doc-tests:
-    name: Run documentation checks
+    name: Docs
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,12 +28,12 @@ jobs:
         run: npm run format
         if: ${{ !cancelled() }}
 
-      - name: Run tsc
-        run: npm run check
+      - name: Run build
+        run: npm run build
         if: ${{ !cancelled() }}
 
   server-unit-tests:
-    name: Run server unit test suites and checks
+    name: Server
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -81,7 +63,7 @@ jobs:
         if: ${{ !cancelled() }}
 
   cli-unit-tests:
-    name: Run cli test suites
+    name: CLI
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -91,7 +73,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run npm install
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup typescript-sdk
+        run: npm ci && npm run build
+        working-directory: ./open-api/typescript-sdk
+
+      - name: Install deps
         run: npm ci
 
       - name: Run linter
@@ -102,12 +93,16 @@ jobs:
         run: npm run format
         if: ${{ !cancelled() }}
 
+      - name: Run tsc
+        run: npm run check
+        if: ${{ !cancelled() }}
+
       - name: Run unit tests & coverage
         run: npm run test:cov
         if: ${{ !cancelled() }}
 
   web-unit-tests:
-    name: Run web unit test suites and checks
+    name: Web
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -116,6 +111,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Run setup typescript-sdk
+        run: npm ci && npm run build
+        working-directory: ./open-api/typescript-sdk
 
       - name: Run npm install
         run: npm ci
@@ -136,26 +135,86 @@ jobs:
         run: npm run check:typescript
         if: ${{ !cancelled() }}
 
-      # - name: Run unit tests & coverage
-      #   run: npm run test:cov
-      #   if: ${{ !cancelled() }}
+      - name: Run unit tests & coverage
+        run: npm run test:cov
+        if: ${{ !cancelled() }}
+
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./e2e
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run setup typescript-sdk
+        run: npm ci && npm run build
+        working-directory: ./open-api/typescript-sdk
+        if: ${{ !cancelled() }}
+
+      - name: Run setup cli
+        run: npm ci && npm run build
+        working-directory: ./cli
+        if: ${{ !cancelled() }}
+
+      - name: Install dependencies
+        run: npm ci
+        if: ${{ !cancelled() }}
+
+      - name: Run linter
+        run: npm run lint
+        if: ${{ !cancelled() }}
+
+      - name: Run formatter
+        run: npm run format
+        if: ${{ !cancelled() }}
+
+      - name: Run tsc
+        run: npm run check
+        if: ${{ !cancelled() }}
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        if: ${{ !cancelled() }}
+
+      - name: Docker build
+        run: docker compose build
+        if: ${{ !cancelled() }}
+
+      - name: Run e2e tests (api & cli)
+        run: npm run test
+        if: ${{ !cancelled() }}
+
+      - name: Run e2e tests (web)
+        run: npx playwright test
+        if: ${{ !cancelled() }}
 
   mobile-unit-tests:
-    name: Run mobile unit tests
+    name: Mobile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          channel: "stable"
-          flutter-version: "3.13.3"
+          channel: 'stable'
+          flutter-version: '3.22.0'
       - name: Run tests
         working-directory: ./mobile
         run: flutter test -j 1
 
   ml-unit-tests:
-    name: Run ML unit tests and checks
+    name: Machine Learning
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -164,41 +223,64 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.11
-          cache: "poetry"
+          cache: 'poetry'
       - name: Install dependencies
         run: |
-          poetry install --with dev
-          poetry run pip install --no-deps -r requirements.txt
+          poetry install --with dev --with cpu
       - name: Lint with ruff
         run: |
-          poetry run ruff check --format=github app
+          poetry run ruff check --output-format=github app export
       - name: Check black formatting
         run: |
-          poetry run black --check app
+          poetry run black --check app export
       - name: Run mypy type checking
         run: |
-          poetry run mypy --install-types --non-interactive app/
+          poetry run mypy --install-types --non-interactive --strict app/
       - name: Run tests and coverage
         run: |
-          poetry run pytest --cov app
+          poetry run pytest app --cov=app --cov-report term-missing
 
-  generated-api-up-to-date:
-    name: Check generated files are up-to-date
+  shellcheck:
+    name: ShellCheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          ignore_paths: >-
+            **/open-api/**
+            **/openapi/**
+            **/node_modules/**
+
+  generated-api-up-to-date:
+    name: OpenAPI Clients
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install server dependencies
+        run: npm --prefix=server ci
+
+      - name: Build the app
+        run: npm --prefix=server run build
+
       - name: Run API generation
-        run: npm --prefix server run api:generate
+        run: make open-api
+
       - name: Find file changes
-        uses: tj-actions/verify-changed-files@v13.1
+        uses: tj-actions/verify-changed-files@v20
         id: verify-changed-files
         with:
           files: |
             mobile/openapi
-            web/src/api/open-api
+            open-api/typescript-sdk
+            open-api/immich-openapi-specs.json
+
       - name: Verify files have not changed
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: |
@@ -207,11 +289,11 @@ jobs:
           exit 1
 
   generated-typeorm-migrations-up-to-date:
-    name: Check generated TypeORM migrations are up-to-date
+    name: TypeORM Checks
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres
+        image: tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -223,26 +305,60 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+    defaults:
+      run:
+        working-directory: ./server
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Install server dependencies
-        run: npm --prefix server ci
+        run: npm ci
+
+      - name: Build the app
+        run: npm run build
+
       - name: Run existing migrations
-        run: npm --prefix server run typeorm:migrations:run
+        run: npm run typeorm:migrations:run
+
+      - name: Test npm run schema:reset command works
+        run: npm run typeorm:schema:reset
+
       - name: Generate new migrations
         continue-on-error: true
-        run: npm --prefix server run typeorm:migrations:generate ./src/infra/migrations/TestMigration
+        run: npm run typeorm:migrations:generate ./src/migrations/TestMigration
+
       - name: Find file changes
-        uses: tj-actions/verify-changed-files@v13.1
+        uses: tj-actions/verify-changed-files@v20
         id: verify-changed-files
         with:
           files: |
-            server/src/infra/migrations/
-      - name: Verify files have not changed
+            server/src/migrations/
+      - name: Verify migration files have not changed
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: |
-          echo "ERROR: Generated files not up to date!"
+          echo "ERROR: Generated migration files not up to date!"
           echo "Changed files: ${{ steps.verify-changed-files.outputs.changed_files }}"
+          exit 1
+
+      - name: Run SQL generation
+        run: npm run sync:sql
+        env:
+          DB_URL: postgres://postgres:postgres@localhost:5432/immich
+
+      - name: Find file changes
+        uses: tj-actions/verify-changed-files@v20
+        id: verify-changed-sql-files
+        with:
+          files: |
+            server/src/queries
+
+      - name: Verify SQL files have not changed
+        if: steps.verify-changed-sql-files.outputs.files_changed == 'true'
+        run: |
+          echo "ERROR: Generated SQL files not up to date!"
+          echo "Changed files: ${{ steps.verify-changed-sql-files.outputs.changed_files }}"
           exit 1
 
   # mobile-integration-tests:
